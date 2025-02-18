@@ -16,6 +16,193 @@ import matplotlib.pyplot as plt
 from diPLSlib import functions as algo
 from diPLSlib.utils import misc as helpers
 import scipy.stats
+from sklearn.metrics.pairwise import rbf_kernel, linear_kernel
+
+# Create KDAPLS class
+
+class KDAPLS(RegressorMixin, BaseEstimator):
+    """
+    Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.
+
+    This class implements KDAPLS by calling the 'kdapls' function from 'functions.py'.
+    KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS)
+    and aligns domains in that space while fitting the regression model on labeled data.
+
+    Parameters
+    ----------
+    A : int, default=2
+        Number of latent variables to use in the model.
+
+    l : float or tuple, default=0
+        Regularization parameter. If a single value is provided, the same regularization is applied
+        to all latent variables.
+
+    kernel_params : dict, optional
+        Dictionary specifying the kernel type and parameters. Accepted keys:
+        - "type" : str, default="rbf"
+            Kernel type, can be "rbf", "linear", or "primal".
+        - "gamma" : float, default=0.0001
+            Kernel coefficient for RBF kernels.
+
+    target_domain : int, default=0
+        Chooses which domain's coefficient vector is used for predictions.
+
+    Attributes
+    ----------
+    coef_ : ndarray of shape (n_features, 1)
+        Regression coefficient vector used for predictions.
+
+    X_ : ndarray of shape (n_samples, n_features)
+        Training data used for fitting the model.
+
+    y_mean_ : float
+        Mean of the training response variable.
+
+    centering_ : dict
+        Dictionary of stored centering information for kernel operations.
+
+    is_fitted_ : bool
+        Whether the model has been fitted to data.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from diPLSlib.models import KDAPLS
+    >>> x = np.random.rand(100, 10)
+    >>> y = np.random.rand(100,1)
+    >>> xs = np.random.rand(80, 10)
+    >>> xt = np.random.rand(50, 10)
+    >>> model = KDAPLS(A=2, l=0.5, kernel_params={"type":"rbf","gamma":0.001})
+    >>> model.fit(x, y, xs, xt)
+    KDAPLS(A=2, l=0.5, kernel_params={'type': 'rbf', 'gamma': 0.001})
+    >>> xtest = np.random.rand(5, 10)
+    >>> yhat = model.predict(xtest)
+
+    References
+    ----------
+    1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., & Shi, W. (2020). Domain adaptive partial least squares regression. 
+       Chemometrics and Intelligent Laboratory Systems, 201, 103986.
+    2. B. Schölkopf, A. Smola, and K. Müller. Nonlinear component analysis as a kernel eigenvalue problem. 
+       Neural computation, 10(5):1299-1319, 1998.
+    """
+
+    def __init__(self, A=2, l=0, kernel_params=None, target_domain=0):
+        self.A = A
+        self.l = l
+        self.kernel_params = kernel_params if kernel_params is not None else {"type": "rbf", "gamma": 0.0001}
+        self.target_domain = target_domain
+        self.is_fitted_ = False
+
+    def fit(self, X, y, xs=None, xt=None, **kwargs):
+        """
+        Fit the KDAPLS Model.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Labeled source domain data (usually the same as xs).
+        y : np.ndarray
+            Corresponding labels for X.
+        xs : np.ndarray
+            Source domain data.
+        xt : np.ndarray
+            Target domain data.
+        **kwargs : dict, optional
+            Additional keyword arguments to pass to the model (e.g., for model selection purposes).
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+
+        # Check for sparse input
+        if issparse(X):
+
+            raise ValueError("Sparse input is not supported. Please convert your data to dense format.")
+ 
+        # Validate input arrays
+        X, y = check_X_y(X, y, ensure_2d=True, allow_nd=False, accept_large_sparse=False, accept_sparse=False, force_all_finite=True)
+        
+
+        # Check if source and target data are provided
+        if xs is None:
+
+            xs = X
+
+        if xt is None:
+
+            xt = X
+
+        # Validate source and target arrays
+        xs = check_array(xs, ensure_2d=True, allow_nd=False, accept_large_sparse=False, accept_sparse=False, force_all_finite=True)
+        xs = np.atleast_2d(xs) if xs is not None else X
+        if isinstance(xt, list):
+            xt = [check_array(x, ensure_2d=True, allow_nd=False, accept_large_sparse=False, accept_sparse=False, force_all_finite=True) for x in xt]
+        else:
+            xt = check_array(xt, ensure_2d=True, allow_nd=False, accept_large_sparse=False, accept_sparse=False, force_all_finite=True)
+        xt = [np.atleast_2d(x) for x in xt] if isinstance(xt, list) else np.atleast_2d(xt) if xt is not None else X
+
+        # Flatten y to 1D array
+        y = np.ravel(y)
+
+        # Check for complex data
+        if np.iscomplexobj(X) or np.iscomplexobj(y) or np.iscomplexobj(xs) or np.iscomplexobj(xt):
+            
+            raise ValueError("Complex data not supported")
+        
+
+        b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = algo.kdapls(
+            X, y, xs, xt,
+            A=self.A,
+            l=self.l,
+            kernel_params=self.kernel_params
+        )
+
+        # Select coefficient vector based on target_domain
+        if self.target_domain == 0:
+            self.coef_ = b
+        else:
+            self.coef_ = bst
+
+        self.centering_ = centering[self.target_domain]
+        self.X_ = X
+        self.y_mean_ = centering[0]["y_mean_"] if 0 in centering else 0.0
+        self.is_fitted_ = True
+        return self
+
+    def predict(self, X):
+        """
+        Predict with KDAPLS model.
+        """
+        check_is_fitted = getattr(self, "is_fitted_", False)
+        if not check_is_fitted:
+            raise ValueError("KDAPLS object is not fitted yet.")
+
+        Kt_c = self._x_centering(X)
+        return Kt_c @ self.coef_ + self.centering_["y_mean_"]
+
+    def _x_centering(self, X):
+        """
+        Center new data X using stored centering_.
+        """
+        import numpy as np
+        n = self.X_.shape[0]
+        Kt = None
+        if self.kernel_params["type"] == "rbf":
+            gamma_ = self.kernel_params["gamma"]
+            Kt = rbf_kernel(X, self.X_, gamma=gamma_)
+        elif self.kernel_params["type"] == "linear":
+            Kt = linear_kernel(X, self.X_)
+        elif self.kernel_params["type"] == "primal":
+            Kt = X.copy()
+
+        if self.kernel_params["type"] == "primal":
+            return Kt - self.centering_["K"].mean(axis=0)
+        else:
+            J = (1 / n) * np.ones((n, n))
+            Jt = (1 / self.centering_["n"]) * (np.ones((X.shape[0], 1)) @ np.ones((1, self.centering_["n"])))
+            return Kt - Kt @ J - Jt @ self.centering_["K"] + Jt @ self.centering_["K"] @ J
 
 
 class DIPLS(RegressorMixin, BaseEstimator):

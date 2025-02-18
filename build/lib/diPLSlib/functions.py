@@ -7,10 +7,234 @@ import scipy.stats
 from scipy.linalg import eigh
 import scipy.spatial.distance as scd
 from scipy.spatial import distance_matrix
+from sklearn.metrics import pairwise as kernels
 import warnings
 warnings.filterwarnings("ignore")
 from sklearn.utils.validation import check_array
 from diPLSlib.utils.misc import calibrateAnalyticGaussianMechanism
+
+
+def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt:np.ndarray, 
+           A:int, 
+           l, 
+           kernel_params:dict={"type":"rbf","gamma":10}):
+    '''
+    Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.
+
+    This method fits a Kernel PLS regression model using labeled source domain data and potentially 
+    unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions. 
+
+    Mathematically, for each latent variable (LV), kda‐PLS finds a weight vector :math:`\mathbf{w}` (with :math:`\mathbf{w}^T\mathbf{w} = 1`) that maximizes
+
+    .. math::
+        \max_{\mathbf{w} : \, \mathbf{w}^T\mathbf{w} = 1} \; \Biggl(
+        \mathbf{w}^T K(X_s, X_s)^T \, Y Y^T \, K(X_s, X_s) \, \mathbf{w}
+        \;-\; \gamma \, \mathbf{w}^T K(X_{st}, X_s)^T \, H L H \, K(X_{st}, X_s) \, \mathbf{w}
+        \Biggr),
+
+    where
+
+    - :math:`K(X_s, X_s)` is the kernel matrix computed from the source-domain data,
+    - :math:`K(X_{st}, X_s)` is the kernel matrix computed between the combined source/target data :math:`X_{st} = [X_s; X_t]` and the source-domain data,
+    - :math:`Y` is the response variable,
+    - :math:`H` denotes the centering matrix,
+    - :math:`L` is the Laplacian matrix defined such that :math:`L_{ij}=1` if the i-th and j-th sample in :math:`X_{st}` belong to the same domain and 0 otherwise,
+    - and :math:`\gamma` is the regularization parameter that balances maximizing the covariance between :math:`K(X_s, X_s)` and :math:`Y` with minimizing the domain discrepancy.
+
+    Parameters
+    ----------
+    x : ndarray of shape (n_samples, n_features)
+        Labeled source domain data.
+
+    y : ndarray of shape (n_samples, 1)
+        Response variable associated with the source domain.
+
+    xs : ndarray of shape (n_source_samples, n_features)
+        Source domain feature data.
+
+    xt : ndarray of shape (n_target_samples, n_features)
+        Target domain feature data.
+
+    A : int
+        Number of latent variables to use in the model.
+
+    l : float or tuple of len(l)=A
+        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
+
+    kernel_params : dict, default={"type":"rbf","gamma":10}
+        Kernel parameters. The dictionary must contain the following keys:
+        - "type": str, default="rbf"
+            Type of kernel to use. Supported types are "rbf", "linear", and "primal".
+        - "gamma": float, default=10
+            Kernel coefficient for the RBF kernel.
+
+    Returns
+    -------
+    b : ndarray of shape (n_features, 1)
+        Regression coefficient vector.
+
+    bst : ndarray of shape (n_features, 1)
+        Regression coefficient vector for the target domain.
+
+    T : ndarray of shape (n_samples, A)
+        Training data projections (scores).
+
+    Tst : ndarray of shape (n_source_samples + n_target_samples, A)
+        Source and target domain projections (scores).
+
+    References
+    ----------
+    1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., & Shi, W. (2020). Domain adaptive partial least squares regression. Chemometrics and Intelligent Laboratory Systems, 201, 103986.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from diPLSlib.functions import kdapls
+    >>> x = np.random.random((100, 10))
+    >>> y = np.random.random((100, 1))
+    >>> xs = np.random.random((50, 10))
+    >>> xt = np.random.random((50, 10))
+    >>> b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, (0.5)) 
+    '''
+    
+    # Get dimensions of arrays and initialize matrices
+    (ns, k) = np.shape(xs)
+    (n, k) = np.shape(x)
+    (nt, k) = np.shape(xt)
+    xst = np.vstack((xs,xt)) 
+    
+    Y = y.copy()
+    if Y.ndim == 1:        
+        Y = Y.reshape(-1,1).copy()   
+        
+    q = Y.shape[1]
+    
+    if kernel_params["type"] == "primal":
+        m = k
+    else:
+        m = n
+
+    W = np.zeros([m, A])
+    T = np.zeros([n, A])
+    Tst = np.zeros([ns+nt, A])
+    P = np.zeros([m, A])
+    Pst = np.zeros([m, A])
+    C = np.zeros([A, q])    
+    
+    # Laplace matrix       
+    J = (1/n)*np.ones((n,n))
+    H = np.eye(n) - J
+    Jst = (1/(ns+nt))*np.ones((ns+nt,ns+nt))
+    Hst = np.eye(ns+nt) - Jst
+    L1 = np.ones((ns+nt,1))
+    L1[ns:,0] = -1
+    L = L1@L1.T
+
+    # Compute kernel matrices
+    if kernel_params["type"] == "rbf":
+    
+        gamma = kernel_params["gamma"]
+        K = kernels.rbf_kernel(x, x, gamma = gamma)
+        Kst = kernels.rbf_kernel(xst, x, gamma = gamma)
+        
+    elif kernel_params["type"] == "linear":
+        
+        K = x@x.T
+        Kst = xst@x.T
+        
+    elif kernel_params["type"] == "primal":
+        
+        K = x.copy()
+        Kst = xst.copy()
+
+    # Store Centering elements
+    centering = {}
+    y_mean_ = Y.mean(axis=0)
+    # Source domain
+    centering[0] = {}
+    centering[0]["n"] = n
+    centering[0]["K"] = K
+    centering[0]["y_mean_"] = y_mean_
+    
+    # Source-target domain
+    centering[1] = {}
+    centering[1]["n"] = ns+nt    
+    centering[1]["K"] = Kst   
+    centering[1]["y_mean_"] = y_mean_
+
+    
+    # Centering
+    if kernel_params["type"] == "primal":
+        K = H@K
+        Kst = Hst@Kst
+    else:
+        K = H@K@H
+        Kst = Kst - Kst@J - Jst@Kst + Jst@Kst@J 
+
+    Y = H@Y   
+        
+    # Compute LVs    
+    for i in range(A):
+        
+        
+        if isinstance(l, tuple) and len(l) == A:       # Separate regularization params for each LV
+
+            lA = l[i]
+
+        elif isinstance(l, (float, int, np.int64)):    # The same regularization param for each LV
+
+            lA = l
+
+        else:
+
+            raise ValueError("The regularization parameter must be either a single value or an A-tuple.")
+        
+        
+        # Compute domain-invariant weight vector
+        wM = (K.T@Y@Y.T@K) - lA*(Kst.T@L@Kst)
+        wd , wm = eigh(wM)         
+        w = wm[:,-1]              
+        w.shape = (w.shape[0],1)
+        
+        # Compute scores and normalize
+        t = K@w           
+        tst = Kst@w
+        t = t / np.linalg.norm(t)
+        tst = tst / np.linalg.norm(tst)
+        
+        # Compute loadings        
+        p = K.T@t
+        pst = Kst.T@tst
+        
+        # Regress y on t
+        c = t.T@Y
+
+        # Store w,t,p,c
+        W[:, i] = w.reshape(m)        
+        T[:, i] = t.reshape(n)        
+        Tst[:, i] = tst.reshape(ns+nt)
+        P[:, i] = p.reshape(m)        
+        Pst[:, i] = pst.reshape(m)
+        C[i] = c.reshape(q)        
+
+        # Deflation
+        K = K - t@p.T
+        Kst = Kst - tst@pst.T 
+        
+        Y = Y - (t@c)
+
+
+    # Calculate regression vector
+    b = W@(np.linalg.inv(P.T@W))@C
+    bst = W@(np.linalg.inv(Pst.T@W))@C
+
+    # Residuals    
+    E = K    
+    Est = Kst
+    Ey = Y
+    
+
+    return b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering
 
 
 def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplacian: bool = False):

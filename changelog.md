@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.3] - 2024-02-14
+Domain adaptive partial least squares regression
+
+### Added
+- New model class `DAPLS` for domain adaptive partial least squares regression.
+
+### Changed
+N/A
+
+### Fixed
+N/A
+
+### Removed
+N/A
+
+### Breaking Changes
+N/A
+
 ## [2.4.2] - 2024-12-13
 
 ### Added
