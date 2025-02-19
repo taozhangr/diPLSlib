@@ -14,7 +14,7 @@ from sklearn.utils.validation import check_array
 from diPLSlib.utils.misc import calibrateAnalyticGaussianMechanism
 
 
-def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt:np.ndarray, 
+def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt, 
            A:int, 
            l, 
            kernel_params:dict={"type":"rbf","gamma":10}):
@@ -52,8 +52,8 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt:np.ndarray,
     xs : ndarray of shape (n_source_samples, n_features)
         Source domain feature data.
 
-    xt : ndarray of shape (n_target_samples, n_features)
-        Target domain feature data.
+    xt : ndarray of shape (n_target_samples, n_features) or list of ndarray
+        Target domain feature data. Multiple domains can be provided as a list.
 
     A : int
         Number of latent variables to use in the model.
@@ -100,8 +100,17 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt:np.ndarray,
     # Get dimensions of arrays and initialize matrices
     (ns, k) = np.shape(xs)
     (n, k) = np.shape(x)
-    (nt, k) = np.shape(xt)
-    xst = np.vstack((xs,xt)) 
+    #(nt, k) = np.shape(xt)
+    #xst = np.vstack((xs,xt)) 
+
+
+    if isinstance(xt, list):
+        nt_list = [np.shape(xti)[0] for xti in xt]
+        nt = sum(nt_list)
+        xst = np.vstack([xs] + xt)
+    else:
+        (nt, k) = np.shape(xt)
+        xst = np.vstack((xs, xt))
     
     Y = y.copy()
     if Y.ndim == 1:        
@@ -126,9 +135,18 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt:np.ndarray,
     H = np.eye(n) - J
     Jst = (1/(ns+nt))*np.ones((ns+nt,ns+nt))
     Hst = np.eye(ns+nt) - Jst
-    L1 = np.ones((ns+nt,1))
-    L1[ns:,0] = -1
-    L = L1@L1.T
+    #L1 = np.ones((ns+nt,1))
+    #L1[ns:,0] = -1
+    #L = L1@L1.T
+    L = np.zeros((ns + nt, ns + nt))
+    L[:ns, :ns] = 1
+    if isinstance(xt, list):
+        start_idx = ns
+        for nti in nt_list:
+            L[start_idx:start_idx+nti, start_idx:start_idx+nti] = 1
+            start_idx += nti
+    else:
+        L[ns:, ns:] = 1
 
     # Compute kernel matrices
     if kernel_params["type"] == "rbf":
