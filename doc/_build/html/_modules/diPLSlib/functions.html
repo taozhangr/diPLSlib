@@ -78,10 +78,255 @@
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eigh</span>
 <span class="kn">import</span> <span class="nn">scipy.spatial.distance</span> <span class="k">as</span> <span class="nn">scd</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">pairwise</span> <span class="k">as</span> <span class="n">kernels</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_array</span>
 <span class="kn">from</span> <span class="nn">diPLSlib.utils.misc</span> <span class="kn">import</span> <span class="n">calibrateAnalyticGaussianMechanism</span>
+
+
+<div class="viewcode-block" id="kdapls">
+<a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.functions.kdapls">[docs]</a>
+<span class="k">def</span> <span class="nf">kdapls</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xs</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> 
+           <span class="n">A</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> 
+           <span class="n">l</span><span class="p">,</span> 
+           <span class="n">kernel_params</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;rbf&quot;</span><span class="p">,</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">}):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.</span>
+
+<span class="sd">    This method fits a Kernel PLS regression model using labeled source domain data and potentially </span>
+<span class="sd">    unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions. </span>
+
+<span class="sd">    Mathematically, for each latent variable (LV), kda‐PLS finds a weight vector :math:`\mathbf{w}` (with :math:`\mathbf{w}^T\mathbf{w} = 1`) that maximizes</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \max_{\mathbf{w} : \, \mathbf{w}^T\mathbf{w} = 1} \; \Biggl(</span>
+<span class="sd">        \mathbf{w}^T K(X_s, X_s)^T \, Y Y^T \, K(X_s, X_s) \, \mathbf{w}</span>
+<span class="sd">        \;-\; \gamma \, \mathbf{w}^T K(X_{st}, X_s)^T \, H L H \, K(X_{st}, X_s) \, \mathbf{w}</span>
+<span class="sd">        \Biggr),</span>
+
+<span class="sd">    where</span>
+
+<span class="sd">    - :math:`K(X_s, X_s)` is the kernel matrix computed from the source-domain data,</span>
+<span class="sd">    - :math:`K(X_{st}, X_s)` is the kernel matrix computed between the combined source/target data :math:`X_{st} = [X_s; X_t]` and the source-domain data,</span>
+<span class="sd">    - :math:`Y` is the response variable,</span>
+<span class="sd">    - :math:`H` denotes the centering matrix,</span>
+<span class="sd">    - :math:`L` is the Laplacian matrix defined such that :math:`L_{ij}=1` if the i-th and j-th sample in :math:`X_{st}` belong to the same domain and 0 otherwise,</span>
+<span class="sd">    - and :math:`\gamma` is the regularization parameter that balances maximizing the covariance between :math:`K(X_s, X_s)` and :math:`Y` with minimizing the domain discrepancy.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">        Labeled source domain data.</span>
+
+<span class="sd">    y : ndarray of shape (n_samples, 1)</span>
+<span class="sd">        Response variable associated with the source domain.</span>
+
+<span class="sd">    xs : ndarray of shape (n_source_samples, n_features)</span>
+<span class="sd">        Source domain feature data.</span>
+
+<span class="sd">    xt : ndarray of shape (n_target_samples, n_features) or list of ndarray</span>
+<span class="sd">        Target domain feature data. Multiple domains can be provided as a list.</span>
+
+<span class="sd">    A : int</span>
+<span class="sd">        Number of latent variables to use in the model.</span>
+
+<span class="sd">    l : float or tuple of len(l)=A</span>
+<span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</span>
+
+<span class="sd">    kernel_params : dict, default={&quot;type&quot;:&quot;rbf&quot;,&quot;gamma&quot;:10}</span>
+<span class="sd">        Kernel parameters. The dictionary must contain the following keys:</span>
+<span class="sd">        - &quot;type&quot;: str, default=&quot;rbf&quot;</span>
+<span class="sd">            Type of kernel to use. Supported types are &quot;rbf&quot;, &quot;linear&quot;, and &quot;primal&quot;.</span>
+<span class="sd">        - &quot;gamma&quot;: float, default=10</span>
+<span class="sd">            Kernel coefficient for the RBF kernel.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    b : ndarray of shape (n_features, 1)</span>
+<span class="sd">        Regression coefficient vector.</span>
+
+<span class="sd">    bst : ndarray of shape (n_features, 1)</span>
+<span class="sd">        Regression coefficient vector for the target domain.</span>
+
+<span class="sd">    T : ndarray of shape (n_samples, A)</span>
+<span class="sd">        Training data projections (scores).</span>
+
+<span class="sd">    Tst : ndarray of shape (n_source_samples + n_target_samples, A)</span>
+<span class="sd">        Source and target domain projections (scores).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., &amp; Shi, W. (2020). Domain adaptive partial least squares regression. Chemometrics and Intelligent Laboratory Systems, 201, 103986.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from diPLSlib.functions import kdapls</span>
+<span class="sd">    &gt;&gt;&gt; x = np.random.random((100, 10))</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.random((100, 1))</span>
+<span class="sd">    &gt;&gt;&gt; xs = np.random.random((50, 10))</span>
+<span class="sd">    &gt;&gt;&gt; xt = np.random.random((50, 10))</span>
+<span class="sd">    &gt;&gt;&gt; b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, (0.5)) </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># Get dimensions of arrays and initialize matrices</span>
+    <span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1">#(nt, k) = np.shape(xt)</span>
+    <span class="c1">#xst = np.vstack((xs,xt)) </span>
+
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">nt_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">xti</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">xti</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">]</span>
+        <span class="n">nt</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nt_list</span><span class="p">)</span>
+        <span class="n">xst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xs</span><span class="p">]</span> <span class="o">+</span> <span class="n">xt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">xt</span><span class="p">)</span>
+        <span class="n">xst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">))</span>
+    
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">Y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>        
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>   
+        
+    <span class="n">q</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;primal&quot;</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">A</span><span class="p">])</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n</span><span class="p">,</span> <span class="n">A</span><span class="p">])</span>
+    <span class="n">Tst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">,</span> <span class="n">A</span><span class="p">])</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">A</span><span class="p">])</span>
+    <span class="n">Pst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">A</span><span class="p">])</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">q</span><span class="p">])</span>    
+    
+    <span class="c1"># Laplace matrix       </span>
+    <span class="n">J</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">J</span>
+    <span class="n">Jst</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">,</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">))</span>
+    <span class="n">Hst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">)</span> <span class="o">-</span> <span class="n">Jst</span>
+    <span class="c1">#L1 = np.ones((ns+nt,1))</span>
+    <span class="c1">#L1[ns:,0] = -1</span>
+    <span class="c1">#L = L1@L1.T</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ns</span> <span class="o">+</span> <span class="n">nt</span><span class="p">,</span> <span class="n">ns</span> <span class="o">+</span> <span class="n">nt</span><span class="p">))</span>
+    <span class="n">L</span><span class="p">[:</span><span class="n">ns</span><span class="p">,</span> <span class="p">:</span><span class="n">ns</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="n">ns</span>
+        <span class="k">for</span> <span class="n">nti</span> <span class="ow">in</span> <span class="n">nt_list</span><span class="p">:</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">start_idx</span><span class="o">+</span><span class="n">nti</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">:</span><span class="n">start_idx</span><span class="o">+</span><span class="n">nti</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">start_idx</span> <span class="o">+=</span> <span class="n">nti</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">L</span><span class="p">[</span><span class="n">ns</span><span class="p">:,</span> <span class="n">ns</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Compute kernel matrices</span>
+    <span class="k">if</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;rbf&quot;</span><span class="p">:</span>
+    
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">rbf_kernel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span><span class="p">)</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">rbf_kernel</span><span class="p">(</span><span class="n">xst</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        
+        <span class="n">K</span> <span class="o">=</span> <span class="n">x</span><span class="nd">@x</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">xst</span><span class="nd">@x</span><span class="o">.</span><span class="n">T</span>
+        
+    <span class="k">elif</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;primal&quot;</span><span class="p">:</span>
+        
+        <span class="n">K</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">xst</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Store Centering elements</span>
+    <span class="n">centering</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">y_mean_</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Source domain</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;n&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;y_mean_&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_mean_</span>
+    
+    <span class="c1"># Source-target domain</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">centering</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;n&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ns</span><span class="o">+</span><span class="n">nt</span>    
+    <span class="n">centering</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;K&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Kst</span>   
+    <span class="n">centering</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;y_mean_&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_mean_</span>
+
+    
+    <span class="c1"># Centering</span>
+    <span class="k">if</span> <span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;primal&quot;</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">H</span><span class="nd">@K</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">Hst</span><span class="nd">@Kst</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">H</span><span class="nd">@K@H</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">Kst</span> <span class="o">-</span> <span class="n">Kst</span><span class="nd">@J</span> <span class="o">-</span> <span class="n">Jst</span><span class="nd">@Kst</span> <span class="o">+</span> <span class="n">Jst</span><span class="nd">@Kst@J</span> 
+
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">H</span><span class="nd">@Y</span>   
+        
+    <span class="c1"># Compute LVs    </span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+        
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">==</span> <span class="n">A</span><span class="p">:</span>       <span class="c1"># Separate regularization params for each LV</span>
+
+            <span class="n">lA</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)):</span>    <span class="c1"># The same regularization param for each LV</span>
+
+            <span class="n">lA</span> <span class="o">=</span> <span class="n">l</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The regularization parameter must be either a single value or an A-tuple.&quot;</span><span class="p">)</span>
+        
+        
+        <span class="c1"># Compute domain-invariant weight vector</span>
+        <span class="n">wM</span> <span class="o">=</span> <span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">T</span><span class="nd">@Y@Y</span><span class="o">.</span><span class="n">T</span><span class="nd">@K</span><span class="p">)</span> <span class="o">-</span> <span class="n">lA</span><span class="o">*</span><span class="p">(</span><span class="n">Kst</span><span class="o">.</span><span class="n">T</span><span class="nd">@L@Kst</span><span class="p">)</span>
+        <span class="n">wd</span> <span class="p">,</span> <span class="n">wm</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">wM</span><span class="p">)</span>         
+        <span class="n">w</span> <span class="o">=</span> <span class="n">wm</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>              
+        <span class="n">w</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># Compute scores and normalize</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">K</span><span class="nd">@w</span>           
+        <span class="n">tst</span> <span class="o">=</span> <span class="n">Kst</span><span class="nd">@w</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">tst</span> <span class="o">=</span> <span class="n">tst</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">tst</span><span class="p">)</span>
+        
+        <span class="c1"># Compute loadings        </span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">T</span><span class="nd">@t</span>
+        <span class="n">pst</span> <span class="o">=</span> <span class="n">Kst</span><span class="o">.</span><span class="n">T</span><span class="nd">@tst</span>
+        
+        <span class="c1"># Regress y on t</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="nd">@Y</span>
+
+        <span class="c1"># Store w,t,p,c</span>
+        <span class="n">W</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>        
+        <span class="n">T</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>        
+        <span class="n">Tst</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tst</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ns</span><span class="o">+</span><span class="n">nt</span><span class="p">)</span>
+        <span class="n">P</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>        
+        <span class="n">Pst</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>        
+
+        <span class="c1"># Deflation</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">K</span> <span class="o">-</span> <span class="n">t</span><span class="nd">@p</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">Kst</span> <span class="o">=</span> <span class="n">Kst</span> <span class="o">-</span> <span class="n">tst</span><span class="nd">@pst</span><span class="o">.</span><span class="n">T</span> 
+        
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span><span class="nd">@c</span><span class="p">)</span>
+
+
+    <span class="c1"># Calculate regression vector</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">W</span><span class="o">@</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="nd">@W</span><span class="p">))</span><span class="nd">@C</span>
+    <span class="n">bst</span> <span class="o">=</span> <span class="n">W</span><span class="o">@</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">Pst</span><span class="o">.</span><span class="n">T</span><span class="nd">@W</span><span class="p">))</span><span class="nd">@C</span>
+
+    <span class="c1"># Residuals    </span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">K</span>    
+    <span class="n">Est</span> <span class="o">=</span> <span class="n">Kst</span>
+    <span class="n">Ey</span> <span class="o">=</span> <span class="n">Y</span>
+    
+
+    <span class="k">return</span> <span class="n">b</span><span class="p">,</span> <span class="n">bst</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Tst</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Pst</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Est</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">centering</span></div>
+
 
 
 <div class="viewcode-block" id="dipals">

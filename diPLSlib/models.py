@@ -25,8 +25,7 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.
 
     This class implements KDAPLS by calling the 'kdapls' function from 'functions.py'.
-    KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS)
-    and aligns domains in that space while fitting the regression model on labeled data.
+    KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS) and aligns domains in that space while fitting the regression model on labeled data.
 
     Parameters
     ----------

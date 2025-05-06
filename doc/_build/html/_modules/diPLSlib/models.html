@@ -87,6 +87,202 @@
 <span class="kn">from</span> <span class="nn">diPLSlib</span> <span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">algo</span>
 <span class="kn">from</span> <span class="nn">diPLSlib.utils</span> <span class="kn">import</span> <span class="n">misc</span> <span class="k">as</span> <span class="n">helpers</span>
 <span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">rbf_kernel</span><span class="p">,</span> <span class="n">linear_kernel</span>
+
+<span class="c1"># Create KDAPLS class</span>
+
+<div class="viewcode-block" id="KDAPLS">
+<a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.models.KDAPLS">[docs]</a>
+<span class="k">class</span> <span class="nc">KDAPLS</span><span class="p">(</span><span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.</span>
+
+<span class="sd">    This class implements KDAPLS by calling the &#39;kdapls&#39; function from &#39;functions.py&#39;.</span>
+<span class="sd">    KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS)</span>
+<span class="sd">    and aligns domains in that space while fitting the regression model on labeled data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : int, default=2</span>
+<span class="sd">        Number of latent variables to use in the model.</span>
+
+<span class="sd">    l : float or tuple, default=0</span>
+<span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied</span>
+<span class="sd">        to all latent variables.</span>
+
+<span class="sd">    kernel_params : dict, optional</span>
+<span class="sd">        Dictionary specifying the kernel type and parameters. Accepted keys:</span>
+<span class="sd">        - &quot;type&quot; : str, default=&quot;rbf&quot;</span>
+<span class="sd">            Kernel type, can be &quot;rbf&quot;, &quot;linear&quot;, or &quot;primal&quot;.</span>
+<span class="sd">        - &quot;gamma&quot; : float, default=0.0001</span>
+<span class="sd">            Kernel coefficient for RBF kernels.</span>
+
+<span class="sd">    target_domain : int, default=0</span>
+<span class="sd">        Chooses which domain&#39;s coefficient vector is used for predictions.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_ : ndarray of shape (n_features, 1)</span>
+<span class="sd">        Regression coefficient vector used for predictions.</span>
+
+<span class="sd">    X_ : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">        Training data used for fitting the model.</span>
+
+<span class="sd">    y_mean_ : float</span>
+<span class="sd">        Mean of the training response variable.</span>
+
+<span class="sd">    centering_ : dict</span>
+<span class="sd">        Dictionary of stored centering information for kernel operations.</span>
+
+<span class="sd">    is_fitted_ : bool</span>
+<span class="sd">        Whether the model has been fitted to data.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from diPLSlib.models import KDAPLS</span>
+<span class="sd">    &gt;&gt;&gt; x = np.random.rand(100, 10)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100,1)</span>
+<span class="sd">    &gt;&gt;&gt; xs = np.random.rand(80, 10)</span>
+<span class="sd">    &gt;&gt;&gt; xt = np.random.rand(50, 10)</span>
+<span class="sd">    &gt;&gt;&gt; model = KDAPLS(A=2, l=0.5, kernel_params={&quot;type&quot;:&quot;rbf&quot;,&quot;gamma&quot;:0.001})</span>
+<span class="sd">    &gt;&gt;&gt; model.fit(x, y, xs, xt)</span>
+<span class="sd">    KDAPLS(A=2, l=0.5, kernel_params={&#39;type&#39;: &#39;rbf&#39;, &#39;gamma&#39;: 0.001})</span>
+<span class="sd">    &gt;&gt;&gt; xtest = np.random.rand(5, 10)</span>
+<span class="sd">    &gt;&gt;&gt; yhat = model.predict(xtest)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., &amp; Shi, W. (2020). Domain adaptive partial least squares regression. </span>
+<span class="sd">       Chemometrics and Intelligent Laboratory Systems, 201, 103986.</span>
+<span class="sd">    2. B. Schölkopf, A. Smola, and K. Müller. Nonlinear component analysis as a kernel eigenvalue problem. </span>
+<span class="sd">       Neural computation, 10(5):1299-1319, 1998.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">kernel_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_domain</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">l</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span> <span class="o">=</span> <span class="n">kernel_params</span> <span class="k">if</span> <span class="n">kernel_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;rbf&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_domain</span> <span class="o">=</span> <span class="n">target_domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted_</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="KDAPLS.fit">
+<a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.models.KDAPLS.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the KDAPLS Model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : np.ndarray</span>
+<span class="sd">            Labeled source domain data (usually the same as xs).</span>
+<span class="sd">        y : np.ndarray</span>
+<span class="sd">            Corresponding labels for X.</span>
+<span class="sd">        xs : np.ndarray</span>
+<span class="sd">            Source domain data.</span>
+<span class="sd">        xt : np.ndarray</span>
+<span class="sd">            Target domain data.</span>
+<span class="sd">        **kwargs : dict, optional</span>
+<span class="sd">            Additional keyword arguments to pass to the model (e.g., for model selection purposes).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : object</span>
+<span class="sd">            Fitted estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check for sparse input</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sparse input is not supported. Please convert your data to dense format.&quot;</span><span class="p">)</span>
+ 
+        <span class="c1"># Validate input arrays</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_nd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_large_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+
+        <span class="c1"># Check if source and target data are provided</span>
+        <span class="k">if</span> <span class="n">xs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">xs</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="k">if</span> <span class="n">xt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">xt</span> <span class="o">=</span> <span class="n">X</span>
+
+        <span class="c1"># Validate source and target arrays</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_nd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_large_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="k">if</span> <span class="n">xs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">xt</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_nd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_large_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xt</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_nd</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_large_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">xt</span><span class="p">)</span> <span class="k">if</span> <span class="n">xt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X</span>
+
+        <span class="c1"># Flatten y to 1D array</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Check for complex data</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">xt</span><span class="p">):</span>
+            
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Complex data not supported&quot;</span><span class="p">)</span>
+        
+
+        <span class="n">b</span><span class="p">,</span> <span class="n">bst</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Tst</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Pst</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Est</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">centering</span> <span class="o">=</span> <span class="n">algo</span><span class="o">.</span><span class="n">kdapls</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span>
+            <span class="n">A</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span>
+            <span class="n">l</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">,</span>
+            <span class="n">kernel_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Select coefficient vector based on target_domain</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_domain</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span> <span class="o">=</span> <span class="n">bst</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span> <span class="o">=</span> <span class="n">centering</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target_domain</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_mean_</span> <span class="o">=</span> <span class="n">centering</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;y_mean_&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">centering</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted_</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="KDAPLS.predict">
+<a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.models.KDAPLS.predict">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict with KDAPLS model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;is_fitted_&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_is_fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;KDAPLS object is not fitted yet.&quot;</span><span class="p">)</span>
+
+        <span class="n">Kt_c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_centering</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Kt_c</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;y_mean_&quot;</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_x_centering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Center new data X using stored centering_.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Kt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;rbf&quot;</span><span class="p">:</span>
+            <span class="n">gamma_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+            <span class="n">Kt</span> <span class="o">=</span> <span class="n">rbf_kernel</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma_</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+            <span class="n">Kt</span> <span class="o">=</span> <span class="n">linear_kernel</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;primal&quot;</span><span class="p">:</span>
+            <span class="n">Kt</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;primal&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Kt</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+            <span class="n">Jt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">])))</span>
+            <span class="k">return</span> <span class="n">Kt</span> <span class="o">-</span> <span class="n">Kt</span> <span class="o">@</span> <span class="n">J</span> <span class="o">-</span> <span class="n">Jt</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">Jt</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">centering_</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span> <span class="o">@</span> <span class="n">J</span></div>
+
 
 
 <div class="viewcode-block" id="DIPLS">
