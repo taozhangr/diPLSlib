@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>diPLSlib package &mdash; diPLSlib 2.4.2 documentation</title>
+  <title>diPLSlib package &mdash; diPLSlib 2.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=de1351e5"></script>
+      <script src="_static/documentation_options.js?v=3c4615cf"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -176,7 +176,7 @@ generalizes well across different domains.</p>
 </dd>
 <dt><strong>A</strong><span class="classifier">int</span></dt><dd><p>Number of latent variables to use in the model.</p>
 </dd>
-<dt><strong>l</strong><span class="classifier">float or tuple of len(l)=A</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
+<dt><strong>l</strong><span class="classifier">float or tuple of length A</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
 </dd>
 <dt><strong>heuristic</strong><span class="classifier">bool, default=False</span></dt><dd><p>If True, automatically determine the regularization parameter to equally balance fitting 
 to Y and minimizing domain discrepancy.</p>
@@ -192,13 +192,11 @@ samples in latent variable space.</p>
 <dd class="field-even"><dl class="simple">
 <dt><strong>b</strong><span class="classifier">ndarray of shape (n_features, 1)</span></dt><dd><p>Regression coefficient vector.</p>
 </dd>
-<dt><strong>b0</strong><span class="classifier">float</span></dt><dd><p>Intercept of the regression model.</p>
-</dd>
 <dt><strong>T</strong><span class="classifier">ndarray of shape (n_samples, A)</span></dt><dd><p>Training data projections (scores).</p>
 </dd>
 <dt><strong>Ts</strong><span class="classifier">ndarray of shape (n_source_samples, A)</span></dt><dd><p>Source domain projections (scores).</p>
 </dd>
-<dt><strong>Tt</strong><span class="classifier">ndarray of shape (n_target_samples, A)</span></dt><dd><p>Target domain projections (scores).</p>
+<dt><strong>Tt</strong><span class="classifier">ndarray of shape (n_target_samples, A) or list of ndarray</span></dt><dd><p>Target domain projections (scores).</p>
 </dd>
 <dt><strong>W</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Weight matrix.</p>
 </dd>
@@ -206,21 +204,21 @@ samples in latent variable space.</p>
 </dd>
 <dt><strong>Ps</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to xs.</p>
 </dd>
-<dt><strong>Pt</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to xt.</p>
+<dt><strong>Pt</strong><span class="classifier">ndarray of shape (n_features, A) or list of ndarray</span></dt><dd><p>Loadings matrix corresponding to xt.</p>
 </dd>
-<dt><strong>E</strong><span class="classifier">ndarray of shape (n_source_samples, n_features)</span></dt><dd><p>Residuals of source domain data.</p>
+<dt><strong>E</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals of training data.</p>
 </dd>
-<dt><strong>Es</strong><span class="classifier">ndarray of shape (n_source_samples, n_features)</span></dt><dd><p>Source domain residual matrix.</p>
+<dt><strong>Es</strong><span class="classifier">ndarray</span></dt><dd><p>Source domain residual matrix.</p>
 </dd>
-<dt><strong>Et</strong><span class="classifier">ndarray of shape (n_target_samples, n_features)</span></dt><dd><p>Target domain residual matrix.</p>
+<dt><strong>Et</strong><span class="classifier">ndarray or list of ndarray</span></dt><dd><p>Target domain residual matrix.</p>
 </dd>
-<dt><strong>Ey</strong><span class="classifier">ndarray of shape (n_source_samples, 1)</span></dt><dd><p>Residuals of response variable in the source domain.</p>
+<dt><strong>Ey</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals of response variable in the source domain.</p>
 </dd>
 <dt><strong>C</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Regression vector relating source projections to the response variable.</p>
 </dd>
-<dt><strong>opt_l</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
+<dt><strong>opt_l</strong><span class="classifier">ndarray of shape (A,)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
 </dd>
-<dt><strong>discrepancy</strong><span class="classifier">ndarray</span></dt><dd><p>The variance discrepancy between source and target domain projections.</p>
+<dt><strong>discrepancy</strong><span class="classifier">ndarray of shape (A,)</span></dt><dd><p>The variance discrepancy between source and target domain projections.</p>
 </dd>
 </dl>
 </dd>
@@ -229,7 +227,7 @@ samples in latent variable space.</p>
 <ol class="arabic simple">
 <li><p>Ramin Nikzad-Langerodi et al., “Domain-Invariant Partial Least Squares Regression”, Analytical Chemistry, 2018.</p></li>
 <li><p>Ramin Nikzad-Langerodi et al., “Domain-Invariant Regression under Beer-Lambert’s Law”, Proc. ICMLA, 2019.</p></li>
-<li><p>Ramin Nikzad-Langerodi et al., Domain adaptation for regression under Beer–Lambert’s law, Knowledge-Based Systems, 2020.</p></li>
+<li><p>Ramin Nikzad-Langerodi et al., “Domain adaptation for regression under Beer–Lambert’s law”, Knowledge-Based Systems, 2020.</p></li>
 <li><ol class="upperalpha simple" start="2">
 <li><p>Mikulasek et al., “Partial least squares regression with multiple domains”, Journal of Chemometrics, 2023.</p></li>
 </ol>
@@ -242,7 +240,7 @@ samples in latent variable space.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Ts</span><span class="p">,</span> <span class="n">Tt</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Ps</span><span class="p">,</span> <span class="n">Pt</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Es</span><span class="p">,</span> <span class="n">Et</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">opt_l</span><span class="p">,</span> <span class="n">discrepancy</span> <span class="o">=</span> <span class="n">dipals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Ts</span><span class="p">,</span> <span class="n">Tt</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Ps</span><span class="p">,</span> <span class="n">Pt</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Es</span><span class="p">,</span> <span class="n">Et</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">opt_l</span><span class="p">,</span> <span class="n">discrepancy</span> <span class="o">=</span> <span class="n">dipals</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -250,13 +248,13 @@ samples in latent variable space.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="diPLSlib.functions.edpls">
 <span class="sig-prename descclassname"><span class="pre">diPLSlib.functions.</span></span><span class="sig-name descname"><span class="pre">edpls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/functions.html#edpls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.functions.edpls" title="Link to this definition"></a></dt>
-<dd><p><span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares Regression.</p>
-<p>A Gaussian mechanism according to Balle &amp; Wang (2018) is used to privately release weights <span class="math notranslate nohighlight">\(\mathbf{W}\)</span>, scores <span class="math notranslate nohighlight">\(\mathbf{T}\)</span>
-and <span class="math notranslate nohighlight">\(X/Y\)</span>-loadings <span class="math notranslate nohighlight">\(\mathbf{P}\)</span>/<span class="math notranslate nohighlight">\(\mathbf{c}\)</span> from the PLS1 algorithm. To this end, for each latent variable, i.i.d. noise from 
+<dd><p>(epsilon, delta)-Differentially Private Partial Least Squares Regression.</p>
+<p>A Gaussian mechanism according to Balle &amp; Wang (2018) is used to privately release weights <span class="math notranslate nohighlight">\(\mathbf{W}\)</span>, scores <span class="math notranslate nohighlight">\(\mathbf{T}\)</span>,
+and <span class="math notranslate nohighlight">\(X/Y\)</span>-loadings <span class="math notranslate nohighlight">\(\mathbf{P}\)</span>/<span class="math notranslate nohighlight">\(\mathbf{c}\)</span> from the PLS1 algorithm. For each latent variable, i.i.d. noise from 
 <span class="math notranslate nohighlight">\(\mathcal{N}(0,\sigma^2)\)</span> with variance satisfying</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\Phi\left( \\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right) - e^{\epsilon} \Phi\left( -\\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right)\leq \delta,\end{split}\]</div>
-<p>with <span class="math notranslate nohighlight">\(\Phi(t) = \mathrm P[\mathcal{N}(0,1)\leq t]\)</span> (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores and loadings, whereas the sensitivity <span class="math notranslate nohighlight">\(\Delta(\cdot)\)</span> for the functions releasing the corresponding quantities is calculated as follows:</p>
+\[\Phi\left( \frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right) - e^{\epsilon} \Phi\left( -\frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right)\leq \delta,\]</div>
+<p>with <span class="math notranslate nohighlight">\(\Phi(t) = \mathrm{P}[\mathcal{N}(0,1)\leq t]\)</span> (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores, and loadings, whereas the sensitivity <span class="math notranslate nohighlight">\(\Delta(\cdot)\)</span> for the functions releasing the corresponding quantities is calculated as follows:</p>
 <div class="math notranslate nohighlight">
 \[\Delta(w) = \sup_{(\mathbf{x}, y)} |y| \|\mathbf{x}\|_2\]</div>
 <div class="math notranslate nohighlight">
@@ -265,47 +263,51 @@ and <span class="math notranslate nohighlight">\(X/Y\)</span>-loadings <span cla
 \[\Delta(p) \leq \sup_{\mathbf{x}}  \|\mathbf{x}\|_2\]</div>
 <div class="math notranslate nohighlight">
 \[\Delta(c) \leq \sup_{y}  |y|.\]</div>
-<p>Note that in contrast to the Gaussian mechanism, proposed in Dwork et al. (2006) and Dwork et al. (2014), the mechanism of Balle &amp; Wang (2018) guarantees <span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-differential privacy 
+<p>Note that in contrast to the Gaussian mechanism proposed in Dwork et al. (2006) and Dwork et al. (2014), the mechanism of Balle &amp; Wang (2018) guarantees <span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-differential privacy 
 for any value of <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)</span> and not only for <span class="math notranslate nohighlight">\(\epsilon \leq 1\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: numpy array of shape (n, m)</strong></dt><dd><p>x-data</p>
+<dt><strong>x</strong><span class="classifier">ndarray of shape (n_samples, n_features)</span></dt><dd><p>Input data.</p>
 </dd>
-<dt><strong>y: numpy array of shape (n, p)</strong></dt><dd></dd>
-<dt><strong>n_components: int</strong></dt><dd><p>Number of latent variables.</p>
+<dt><strong>y</strong><span class="classifier">ndarray of shape (n_samples, n_targets)</span></dt><dd><p>Target values.</p>
 </dd>
-<dt><strong>epsilon: float</strong></dt><dd><p>Privacy loss parameter.</p>
+<dt><strong>n_components</strong><span class="classifier">int</span></dt><dd><p>Number of latent variables.</p>
 </dd>
-<dt><strong>delta: float, default=0.05</strong></dt><dd><p>Failure probability.</p>
+<dt><strong>epsilon</strong><span class="classifier">float</span></dt><dd><p>Privacy loss parameter.</p>
 </dd>
-<dt><strong>rng: numpy.random.Generator, optional</strong></dt><dd><p>Random number generator.</p>
+<dt><strong>delta</strong><span class="classifier">float, default=0.05</span></dt><dd><p>Failure probability.</p>
+</dd>
+<dt><strong>rng</strong><span class="classifier">numpy.random.Generator, optional</span></dt><dd><p>Random number generator.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><a href="#id1"><span class="problematic" id="id2">coef_</span></a>: numpy array of shape (m,)</dt><dd><p>Regression coefficients.</p>
+<dt><strong>coef_</strong><span class="classifier">ndarray of shape (n_features, n_targets)</span></dt><dd><p>Regression coefficients.</p>
 </dd>
-<dt><a href="#id3"><span class="problematic" id="id4">x_scores_</span></a>: numpy array of shape (n, A)</dt><dd><p>X scores.</p>
+<dt><strong>x_weights_</strong><span class="classifier">ndarray of shape (n_features, n_components)</span></dt><dd><p>X weights.</p>
 </dd>
-<dt><a href="#id5"><span class="problematic" id="id6">x_loadings_</span></a>: numpy array of shape (m, A)</dt><dd><p>X loadings.</p>
+<dt><strong>x_loadings_</strong><span class="classifier">ndarray of shape (n_features, n_components)</span></dt><dd><p>X loadings.</p>
 </dd>
-<dt><a href="#id7"><span class="problematic" id="id8">x_weights_</span></a>: numpy array of shape (m, A)</dt><dd><p>X weights.</p>
+<dt><strong>y_loadings_</strong><span class="classifier">ndarray of shape (n_components, n_targets)</span></dt><dd><p>Y loadings.</p>
 </dd>
-<dt><a href="#id9"><span class="problematic" id="id10">y_loadings_</span></a>: numpy array of shape (A, )</dt><dd><p>Y loadings.</p>
+<dt><strong>x_scores_</strong><span class="classifier">ndarray of shape (n_samples, n_components)</span></dt><dd><p>X scores.</p>
 </dd>
-<dt><a href="#id11"><span class="problematic" id="id12">x_residuals_</span></a>: numpy array of shape (n, m)</dt><dd><p>X residuals.</p>
+<dt><strong>x_residuals_</strong><span class="classifier">ndarray of shape (n_samples, n_features)</span></dt><dd><p>X residuals.</p>
 </dd>
-<dt><a href="#id13"><span class="problematic" id="id14">y_residuals_</span></a>: numpy array of shape (n, p)</dt><dd><p>Y residuals.</p>
+<dt><strong>y_residuals_</strong><span class="classifier">ndarray of shape (n_samples, n_targets)</span></dt><dd><p>Y residuals.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">References</p>
 <ul class="simple">
-<li><p>R.Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (2024, unpublished).</p></li>
-<li><p>Balle, B., &amp; Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</p></li>
+<li><ol class="upperalpha simple" start="18">
+<li><p>Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).</p></li>
+</ol>
+</li>
+<li><p>Balle, B., &amp; Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</p></li>
 </ul>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">diPLSlib.functions</span> <span class="kn">import</span> <span class="n">edpls</span>
@@ -325,9 +327,9 @@ for any value of <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)<
 unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions.</p>
 <p>Mathematically, for each latent variable (LV), kda‐PLS finds a weight vector <span class="math notranslate nohighlight">\(\mathbf{w}\)</span> (with <span class="math notranslate nohighlight">\(\mathbf{w}^T\mathbf{w} = 1\)</span>) that maximizes</p>
 <div class="math notranslate nohighlight">
-\[\max_{\mathbf{w} : \, \mathbf{w}^T\mathbf{w} = 1} \; \Biggl(
-\mathbf{w}^T K(X_s, X_s)^T \, Y Y^T \, K(X_s, X_s) \, \mathbf{w}
-\;-\; \gamma \, \mathbf{w}^T K(X_{st}, X_s)^T \, H L H \, K(X_{st}, X_s) \, \mathbf{w}
+\[\max_{\mathbf{w} : \mathbf{w}^T\mathbf{w} = 1} \Biggl(
+\mathbf{w}^T K(X_s, X_s)^T Y Y^T K(X_s, X_s) \mathbf{w}
+- \gamma \mathbf{w}^T K(X_{st}, X_s)^T H L H K(X_{st}, X_s) \mathbf{w}
 \Biggr),\]</div>
 <p>where</p>
 <ul class="simple">
@@ -336,7 +338,7 @@ unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source a
 <li><p><span class="math notranslate nohighlight">\(Y\)</span> is the response variable,</p></li>
 <li><p><span class="math notranslate nohighlight">\(H\)</span> denotes the centering matrix,</p></li>
 <li><p><span class="math notranslate nohighlight">\(L\)</span> is the Laplacian matrix defined such that <span class="math notranslate nohighlight">\(L_{ij}=1\)</span> if the i-th and j-th sample in <span class="math notranslate nohighlight">\(X_{st}\)</span> belong to the same domain and 0 otherwise,</p></li>
-<li><p>and <span class="math notranslate nohighlight">\(\gamma\)</span> is the regularization parameter that balances maximizing the covariance between <span class="math notranslate nohighlight">\(K(X_s, X_s)\)</span> and <span class="math notranslate nohighlight">\(Y\)</span> with minimizing the domain discrepancy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span> is the regularization parameter that balances maximizing the covariance between <span class="math notranslate nohighlight">\(K(X_s, X_s)\)</span> and <span class="math notranslate nohighlight">\(Y\)</span> with minimizing the domain discrepancy.</p></li>
 </ul>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -351,9 +353,9 @@ unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source a
 </dd>
 <dt><strong>A</strong><span class="classifier">int</span></dt><dd><p>Number of latent variables to use in the model.</p>
 </dd>
-<dt><strong>l</strong><span class="classifier">float or tuple of len(l)=A</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
+<dt><strong>l</strong><span class="classifier">float or tuple of length A</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
 </dd>
-<dt><strong>kernel_params</strong><span class="classifier">dict, default={“type”:”rbf”,”gamma”:10}</span></dt><dd><p>Kernel parameters. The dictionary must contain the following keys:
+<dt><strong>kernel_params</strong><span class="classifier">dict, default={“type”: “rbf”, “gamma”: 10}</span></dt><dd><p>Kernel parameters. The dictionary must contain the following keys:
 - “type”: str, default=”rbf”</p>
 <blockquote>
 <div><p>Type of kernel to use. Supported types are “rbf”, “linear”, and “primal”.</p>
@@ -378,6 +380,22 @@ unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source a
 </dd>
 <dt><strong>Tst</strong><span class="classifier">ndarray of shape (n_source_samples + n_target_samples, A)</span></dt><dd><p>Source and target domain projections (scores).</p>
 </dd>
+<dt><strong>W</strong><span class="classifier">ndarray of shape (m, A)</span></dt><dd><p>Weight matrix.</p>
+</dd>
+<dt><strong>P</strong><span class="classifier">ndarray of shape (m, A)</span></dt><dd><p>Loadings matrix for source domain.</p>
+</dd>
+<dt><strong>Pst</strong><span class="classifier">ndarray of shape (m, A)</span></dt><dd><p>Loadings matrix for source and target domains.</p>
+</dd>
+<dt><strong>E</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals for source domain.</p>
+</dd>
+<dt><strong>Est</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals for source and target domains.</p>
+</dd>
+<dt><strong>Ey</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals of response variable.</p>
+</dd>
+<dt><strong>C</strong><span class="classifier">ndarray of shape (A, q)</span></dt><dd><p>Regression vector relating projections to the response variable.</p>
+</dd>
+<dt><strong>centering</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing centering information.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -392,7 +410,7 @@ unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source a
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">bst</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Tst</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Pst</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Est</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">centering</span> <span class="o">=</span> <span class="n">kdapls</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">bst</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Tst</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Pst</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Est</span><span class="p">,</span> <span class="n">Ey</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">centering</span> <span class="o">=</span> <span class="n">kdapls</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -442,6 +460,8 @@ Journal of Chemometrics, 35(4), e3319.</p>
 <ul class="simple">
 <li><p>DIPLS base class</p></li>
 <li><p>GCTPLS class</p></li>
+<li><p>EDPLS class</p></li>
+<li><p>KDAPLS class</p></li>
 </ul>
 <dl class="py class">
 <dt class="sig sig-object py" id="diPLSlib.models.DIPLS">
@@ -454,9 +474,9 @@ source and target domains through domain-specific feature transformations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>A</strong><span class="classifier">int</span></dt><dd><p>Number of latent variables to be used in the model.</p>
+<dt><strong>A</strong><span class="classifier">int, default=2</span></dt><dd><p>Number of latent variables to use in the model.</p>
 </dd>
-<dt><strong>l</strong><span class="classifier">float or tuple with len(l)=A, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
+<dt><strong>l</strong><span class="classifier">float or tuple of length A, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
 </dd>
 <dt><strong>centering</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, source and target domain data are mean-centered.</p>
 </dd>
@@ -468,7 +488,7 @@ for which of the target domains the model should apply.
 If target_domain=0, the model applies to the source domain,
 if target_domain=1, it applies to the first target domain, and so on.</p>
 </dd>
-<dt><strong>rescale</strong><span class="classifier">Union[str, ndarray], default=’Target’</span></dt><dd><p>Determines rescaling of the test data. If ‘Target’ or ‘Source’, the test data will be
+<dt><strong>rescale</strong><span class="classifier">str or ndarray, default=’Target’</span></dt><dd><p>Determines rescaling of the test data. If ‘Target’ or ‘Source’, the test data will be
 rescaled to the mean of xt or xs, respectively. If an ndarray is provided, the test data
 will be rescaled to the mean of the provided array.</p>
 </dd>
@@ -476,19 +496,19 @@ will be rescaled to the mean of the provided array.</p>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>x</cite>.</p>
+<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>X</cite>.</p>
 </dd>
 <dt><strong>ns_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xs</cite>.</p>
 </dd>
 <dt><strong>nt_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xt</cite>.</p>
 </dd>
-<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features (variables) in <cite>x</cite>.</p>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features in <cite>X</cite>.</p>
 </dd>
-<dt><strong>mu_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>x</cite>.</p>
+<dt><strong>mu_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>X</cite>.</p>
 </dd>
 <dt><strong>mu_s_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>xs</cite>.</p>
 </dd>
-<dt><strong>mu_t_</strong><span class="classifier">ndarray of shape (n_features,) or ndarray of shape (n_domains, n_features)</span></dt><dd><p>Mean of columns in <cite>xt</cite>, averaged per target domain if multiple domains exist.</p>
+<dt><strong>mu_t_</strong><span class="classifier">ndarray of shape (n_features,) or list of ndarray</span></dt><dd><p>Mean of columns in <cite>xt</cite>, averaged per target domain if multiple domains exist.</p>
 </dd>
 <dt><strong>b_</strong><span class="classifier">ndarray of shape (n_features, 1)</span></dt><dd><p>Regression coefficient vector.</p>
 </dd>
@@ -498,31 +518,31 @@ will be rescaled to the mean of the provided array.</p>
 </dd>
 <dt><strong>Ts_</strong><span class="classifier">ndarray of shape (n_source_samples, A)</span></dt><dd><p>Source domain projections (scores).</p>
 </dd>
-<dt><strong>Tt_</strong><span class="classifier">ndarray of shape (n_target_samples, A)</span></dt><dd><p>Target domain projections (scores).</p>
+<dt><strong>Tt_</strong><span class="classifier">ndarray of shape (n_target_samples, A) or list of ndarray</span></dt><dd><p>Target domain projections (scores).</p>
 </dd>
 <dt><strong>W_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Weight matrix.</p>
 </dd>
-<dt><strong>P_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to x.</p>
+<dt><strong>P_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to X.</p>
 </dd>
 <dt><strong>Ps_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to xs.</p>
 </dd>
-<dt><strong>Pt_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to xt.</p>
+<dt><strong>Pt_</strong><span class="classifier">ndarray of shape (n_features, A) or list of ndarray</span></dt><dd><p>Loadings matrix corresponding to xt.</p>
 </dd>
-<dt><strong>E_</strong><span class="classifier">ndarray of shape (n_source_samples, n_features)</span></dt><dd><p>Residuals of source domain data.</p>
+<dt><strong>E_</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals of training data.</p>
 </dd>
-<dt><strong>Es_</strong><span class="classifier">ndarray of shape (n_source_samples, n_features)</span></dt><dd><p>Source domain residual matrix.</p>
+<dt><strong>Es_</strong><span class="classifier">ndarray</span></dt><dd><p>Source domain residual matrix.</p>
 </dd>
-<dt><strong>Et_</strong><span class="classifier">ndarray of shape (n_target_samples, n_features)</span></dt><dd><p>Target domain residual matrix.</p>
+<dt><strong>Et_</strong><span class="classifier">ndarray or list of ndarray</span></dt><dd><p>Target domain residual matrix.</p>
 </dd>
-<dt><strong>Ey_</strong><span class="classifier">ndarray of shape (n_source_samples, 1)</span></dt><dd><p>Residuals of response variable in the source domain.</p>
+<dt><strong>Ey_</strong><span class="classifier">ndarray</span></dt><dd><p>Residuals of response variable in the source domain.</p>
 </dd>
 <dt><strong>C_</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Regression vector relating source projections to the response variable.</p>
 </dd>
-<dt><strong>opt_l_</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
+<dt><strong>opt_l_</strong><span class="classifier">ndarray of shape (A,)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
 </dd>
-<dt><strong>discrepancy_</strong><span class="classifier">ndarray</span></dt><dd><p>The variance discrepancy between source and target domain projections.</p>
+<dt><strong>discrepancy_</strong><span class="classifier">ndarray of shape (A,)</span></dt><dd><p>The variance discrepancy between source and target domain projections.</p>
 </dd>
-<dt><strong>is_fitted_</strong><span class="classifier">bool, default=False</span></dt><dd><p>Whether the model has been fitted to data.</p>
+<dt><strong>is_fitted_</strong><span class="classifier">bool</span></dt><dd><p>Whether the model has been fitted to data.</p>
 </dd>
 </dl>
 </dd>
@@ -560,7 +580,7 @@ will be rescaled to the mean of the provided array.</p>
 <ol class="arabic simple">
 <li><p>Ramin Nikzad-Langerodi et al., “Domain-Invariant Partial Least Squares Regression”, Analytical Chemistry, 2018.</p></li>
 <li><p>Ramin Nikzad-Langerodi et al., “Domain-Invariant Regression under Beer-Lambert’s Law”, Proc. ICMLA, 2019.</p></li>
-<li><p>Ramin Nikzad-Langerodi et al., Domain adaptation for regression under Beer–Lambert’s law, Knowledge-Based Systems, 2020.</p></li>
+<li><p>Ramin Nikzad-Langerodi et al., “Domain adaptation for regression under Beer–Lambert’s law”, Knowledge-Based Systems, 2020.</p></li>
 <li><ol class="upperalpha simple" start="2">
 <li><p>Mikulasek et al., “Partial least squares regression with multiple domains”, Journal of Chemometrics, 2023.</p></li>
 </ol>
@@ -570,11 +590,10 @@ will be rescaled to the mean of the provided array.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">diPLSlib.models</span> <span class="kn">import</span> <span class="n">DIPLS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">DIPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">DIPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
 <span class="go">DIPLS(A=5, l=10)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -730,42 +749,48 @@ sub-estimator of a meta-estimator, e.g. used inside a
 <dt class="sig sig-object py" id="diPLSlib.models.EDPLS">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">diPLSlib.models.</span></span><span class="sig-name descname"><span class="pre">EDPLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centering</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#EDPLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.EDPLS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#diPLSlib.models.DIPLS" title="diPLSlib.models.DIPLS"><code class="xref py py-class docutils literal notranslate"><span class="pre">DIPLS</span></code></a></p>
-<p><span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares Regression.</p>
-<p>This class implements the  <span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).</p>
+<p>(epsilon, delta)-Differentially Private Partial Least Squares Regression.</p>
+<p>This class implements the (epsilon, delta)-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>A: int</strong></dt><dd><p>Number of latent variables.</p>
+<dt><strong>A</strong><span class="classifier">int, default=2</span></dt><dd><p>Number of latent variables.</p>
 </dd>
-<dt><strong>epsilon</strong><span class="classifier">float</span></dt><dd><p>Privacy loss parameter.</p>
+<dt><strong>epsilon</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Privacy loss parameter.</p>
 </dd>
 <dt><strong>delta</strong><span class="classifier">float, default=0.05</span></dt><dd><p>Failure probability.</p>
 </dd>
 <dt><strong>centering</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, the data will be centered before fitting the model.</p>
 </dd>
+<dt><strong>random_state</strong><span class="classifier">int, RandomState instance or None, default=None</span></dt><dd><p>Controls the randomness of the noise added for differential privacy.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>n_: int</strong></dt><dd><p>Number of samples in the training data.</p>
+<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in the training data.</p>
 </dd>
-<dt><strong>n_features_: int</strong></dt><dd><p>Number of features in the training data.</p>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features in the training data.</p>
 </dd>
-<dt><strong>x_mean_: array, shape (n_features,)</strong></dt><dd><p>Estimated mean of each feature.</p>
+<dt><strong>x_mean_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Estimated mean of each feature.</p>
 </dd>
-<dt><strong>coef_: array, shape (n_features,)</strong></dt><dd><p>Estimated regression coefficients.</p>
+<dt><strong>coef_</strong><span class="classifier">ndarray of shape (n_features, 1)</span></dt><dd><p>Estimated regression coefficients.</p>
 </dd>
-<dt><strong>y_mean_: float</strong></dt><dd><p>Estimated intercept.</p>
+<dt><strong>y_mean_</strong><span class="classifier">float</span></dt><dd><p>Estimated intercept.</p>
 </dd>
-<dt><strong>x_scores_: array, shape (n, A)</strong></dt><dd><p>X scores.</p>
+<dt><strong>x_scores_</strong><span class="classifier">ndarray of shape (n_samples, A)</span></dt><dd><p>X scores.</p>
 </dd>
-<dt><strong>x_loadings_: array, shape (n_features, A)</strong></dt><dd><p>X loadings.</p>
+<dt><strong>x_loadings_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>X loadings.</p>
 </dd>
-<dt><strong>x_weights_: array, shape (n_features, A)</strong></dt><dd><p>X weights.</p>
+<dt><strong>x_weights_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>X weights.</p>
 </dd>
-<dt><strong>y_loadings_: array, shape (n_features, A)</strong></dt><dd><p>Y loadings.</p>
+<dt><strong>y_loadings_</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Y loadings.</p>
 </dd>
-<dt><strong>is_fitted_: bool</strong></dt><dd><p>True if the model has been fitted.</p>
+<dt><strong>x_residuals_</strong><span class="classifier">ndarray of shape (n_samples, n_features)</span></dt><dd><p>X residuals.</p>
+</dd>
+<dt><strong>y_residuals_</strong><span class="classifier">ndarray of shape (n_samples, 1)</span></dt><dd><p>Y residuals.</p>
+</dd>
+<dt><strong>is_fitted_</strong><span class="classifier">bool</span></dt><dd><p>True if the model has been fitted.</p>
 </dd>
 </dl>
 </dd>
@@ -804,14 +829,17 @@ sub-estimator of a meta-estimator, e.g. used inside a
 </table>
 <p class="rubric">References</p>
 <ul class="simple">
-<li><p>R.Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (2024, unpublished).</p></li>
-<li><p>Balle, B., &amp; Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</p></li>
+<li><ol class="upperalpha simple" start="18">
+<li><p>Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).</p></li>
+</ol>
+</li>
+<li><p>Balle, B., &amp; Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</p></li>
 </ul>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">diPLSlib.models</span> <span class="kn">import</span> <span class="n">EDPLS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">EDPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="go">EDPLS(A=5, delta=0.01, epsilon=0.1)</span>
@@ -957,36 +985,37 @@ sub-estimator of a meta-estimator, e.g. used inside a
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">diPLSlib.models.</span></span><span class="sig-name descname"><span class="pre">GCTPLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heuristic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Target'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#GCTPLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.GCTPLS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#diPLSlib.models.DIPLS" title="diPLSlib.models.DIPLS"><code class="xref py py-class docutils literal notranslate"><span class="pre">DIPLS</span></code></a></p>
 <p>Graph-based Calibration Transfer Partial Least Squares (GCT-PLS).</p>
-<p>This method minimizes the distance betwee source (xs) and target (xt) domain data pairs in the latent variable space
+<p>This method minimizes the distance between source (xs) and target (xt) domain data pairs in the latent variable space
 while fitting the response.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>l</strong><span class="classifier">float or tuple with len(l)=A, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
+<dt><strong>A</strong><span class="classifier">int, default=2</span></dt><dd><p>Number of latent variables to use in the model.</p>
 </dd>
-<dt><strong>centering</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, source and target domain data are mean-centered before fitting.
-Centering can be crucial in adjusting data for more effective transfer learning.</p>
+<dt><strong>l</strong><span class="classifier">float or tuple of length A, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
+</dd>
+<dt><strong>centering</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, source and target domain data are mean-centered before fitting.</p>
 </dd>
 <dt><strong>heuristic</strong><span class="classifier">bool, default=False</span></dt><dd><p>If True, the regularization parameter is set to a heuristic value aimed
 at balancing model fitting quality for the response variable y while minimizing
 discrepancies between domain representations.</p>
 </dd>
-<dt><strong>rescale</strong><span class="classifier">Union[str, ndarray], default=’Target’</span></dt><dd><p>Determines rescaling of the test data. If ‘Target’ or ‘Source’, the test data will be rescaled to the mean of xt or xs, respectively. 
+<dt><strong>rescale</strong><span class="classifier">str or ndarray, default=’Target’</span></dt><dd><p>Determines rescaling of the test data. If ‘Target’ or ‘Source’, the test data will be rescaled to the mean of xt or xs, respectively. 
 If an ndarray is provided, the test data will be rescaled to the mean of the provided array.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>x</cite>.</p>
+<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>X</cite>.</p>
 </dd>
 <dt><strong>ns_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xs</cite>.</p>
 </dd>
 <dt><strong>nt_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xt</cite>.</p>
 </dd>
-<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features (variables) in <cite>x</cite>.</p>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features in <cite>X</cite>.</p>
 </dd>
-<dt><strong>mu_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>x</cite>.</p>
+<dt><strong>mu_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>X</cite>.</p>
 </dd>
 <dt><strong>mu_s_</strong><span class="classifier">ndarray of shape (n_features,)</span></dt><dd><p>Mean of columns in <cite>xs</cite>.</p>
 </dd>
@@ -1004,7 +1033,7 @@ If an ndarray is provided, the test data will be rescaled to the mean of the pro
 </dd>
 <dt><strong>W_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Weight matrix.</p>
 </dd>
-<dt><strong>P_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to x.</p>
+<dt><strong>P_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to X.</p>
 </dd>
 <dt><strong>Ps_</strong><span class="classifier">ndarray of shape (n_features, A)</span></dt><dd><p>Loadings matrix corresponding to xs.</p>
 </dd>
@@ -1020,11 +1049,11 @@ If an ndarray is provided, the test data will be rescaled to the mean of the pro
 </dd>
 <dt><strong>C_</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Regression vector relating source projections to the response variable.</p>
 </dd>
-<dt><strong>opt_l_</strong><span class="classifier">ndarray of shape (A, 1)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
+<dt><strong>opt_l_</strong><span class="classifier">ndarray of shape (A,)</span></dt><dd><p>Heuristically determined regularization parameter for each latent variable.</p>
 </dd>
 <dt><strong>discrepancy_</strong><span class="classifier">ndarray</span></dt><dd><p>The variance discrepancy between source and target domain projections.</p>
 </dd>
-<dt><strong>is_fitted_</strong><span class="classifier">bool, default=False</span></dt><dd><p>Whether the model has been fitted to data.</p>
+<dt><strong>is_fitted_</strong><span class="classifier">bool</span></dt><dd><p>Whether the model has been fitted to data.</p>
 </dd>
 </dl>
 </dd>
@@ -1068,7 +1097,7 @@ Journal of Chemometrics, 35(4), e3319.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GCTPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GCTPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
 <span class="go">GCTPLS(A=3, l=(2, 5, 7))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -1199,15 +1228,14 @@ sub-estimator of a meta-estimator, e.g. used inside a
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">diPLSlib.models.</span></span><span class="sig-name descname"><span class="pre">KDAPLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#KDAPLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.KDAPLS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></p>
 <p>Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.</p>
-<p>This class implements KDAPLS by calling the ‘kdapls’ function from ‘functions.py’.
+<p>This class implements KDAPLS by calling the <cite>kdapls</cite> function from <cite>functions.py</cite>.
 KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS) and aligns domains in that space while fitting the regression model on labeled data.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>A</strong><span class="classifier">int, default=2</span></dt><dd><p>Number of latent variables to use in the model.</p>
 </dd>
-<dt><strong>l</strong><span class="classifier">float or tuple, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied
-to all latent variables.</p>
+<dt><strong>l</strong><span class="classifier">float or tuple, default=0</span></dt><dd><p>Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</p>
 </dd>
 <dt><strong>kernel_params</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary specifying the kernel type and parameters. Accepted keys:
 - “type” : str, default=”rbf”</p>
@@ -1222,15 +1250,15 @@ to all latent variables.</p>
 </li>
 </ul>
 </dd>
-<dt><strong>target_domain</strong><span class="classifier">int, default=0</span></dt><dd><p>Chooses which domain’s coefficient vector is used for predictions.</p>
+<dt><strong>target_domain</strong><span class="classifier">int, default=0</span></dt><dd><p>Specifies which domain’s coefficient vector is used for predictions.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl>
-<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>x</cite>.</p>
+<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>X</cite>.</p>
 </dd>
-<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features (variables) in <cite>x</cite>.</p>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features in <cite>X</cite>.</p>
 </dd>
 <dt><strong>ns_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xs</cite>.</p>
 </dd>
@@ -1238,11 +1266,11 @@ to all latent variables.</p>
 </dd>
 <dt><strong>coef_</strong><span class="classifier">ndarray of shape (n_features, 1)</span></dt><dd><p>Regression coefficient vector used for predictions.</p>
 </dd>
-<dt><strong>X_</strong><span class="classifier">ndarray of shape (<a href="#id15"><span class="problematic" id="id16">n_</span></a>, <a href="#id17"><span class="problematic" id="id18">n_features_in_</span></a>)</span></dt><dd><p>Training data used for fitting the model.</p>
+<dt><strong>X_</strong><span class="classifier">ndarray of shape (<a href="#id1"><span class="problematic" id="id2">n_</span></a>, <a href="#id3"><span class="problematic" id="id4">n_features_in_</span></a>)</span></dt><dd><p>Training data used for fitting the model.</p>
 </dd>
-<dt><strong>xs_</strong><span class="classifier">ndarray of shape (<a href="#id19"><span class="problematic" id="id20">ns_</span></a>, <a href="#id21"><span class="problematic" id="id22">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) Source domain data used for fitting the model.</p>
+<dt><strong>xs_</strong><span class="classifier">ndarray of shape (<a href="#id5"><span class="problematic" id="id6">ns_</span></a>, <a href="#id7"><span class="problematic" id="id8">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) source domain data used for fitting the model.</p>
 </dd>
-<dt><strong>xt_</strong><span class="classifier">ndarray of shape (<a href="#id23"><span class="problematic" id="id24">nt_</span></a>, <a href="#id25"><span class="problematic" id="id26">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) Target domain data used for fitting the model.</p>
+<dt><strong>xt_</strong><span class="classifier">ndarray of shape (<a href="#id9"><span class="problematic" id="id10">nt_</span></a>, <a href="#id11"><span class="problematic" id="id12">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) target domain data used for fitting the model.</p>
 </dd>
 <dt><strong>y_mean_</strong><span class="classifier">float</span></dt><dd><p>Mean of the training response variable.</p>
 </dd>
@@ -1293,10 +1321,10 @@ Neural computation, 10(5):1299-1319, 1998.</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">diPLSlib.models</span> <span class="kn">import</span> <span class="n">KDAPLS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">KDAPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">kernel_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;rbf&quot;</span><span class="p">,</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span><span class="mf">0.001</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">KDAPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">kernel_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;rbf&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
 <span class="go">KDAPLS(kernel_params={&#39;gamma&#39;: 0.001, &#39;type&#39;: &#39;rbf&#39;}, l=0.5)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
@@ -1476,7 +1504,7 @@ sub-estimator of a meta-estimator, e.g. used inside a
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Ramin Nikzad-Langerodi.</p>
+    <p>&#169; Copyright 2025, Ramin Nikzad-Langerodi.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -4,6 +4,8 @@ diPLSlib model classes
 
 - DIPLS base class
 - GCTPLS class
+- EDPLS class
+- KDAPLS class
 '''
 
 # Modules
@@ -25,7 +27,7 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     """
     Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.
 
-    This class implements KDAPLS by calling the 'kdapls' function from 'functions.py'.
+    This class implements KDAPLS by calling the `kdapls` function from `functions.py`.
     KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS) and aligns domains in that space while fitting the regression model on labeled data.
 
     Parameters
@@ -34,8 +36,7 @@ class KDAPLS(RegressorMixin, BaseEstimator):
         Number of latent variables to use in the model.
 
     l : float or tuple, default=0
-        Regularization parameter. If a single value is provided, the same regularization is applied
-        to all latent variables.
+        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
 
     kernel_params : dict, optional
         Dictionary specifying the kernel type and parameters. Accepted keys:
@@ -45,15 +46,15 @@ class KDAPLS(RegressorMixin, BaseEstimator):
             Kernel coefficient for RBF kernels.
 
     target_domain : int, default=0
-        Chooses which domain's coefficient vector is used for predictions.
+        Specifies which domain's coefficient vector is used for predictions.
 
     Attributes
     ----------
     n_ : int
-        Number of samples in `x`.
+        Number of samples in `X`.
 
     n_features_in_ : int
-        Number of features (variables) in `x`.
+        Number of features in `X`.
 
     ns_ : int
         Number of samples in `xs`.
@@ -67,11 +68,11 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     X_ : ndarray of shape (n_, n_features_in_)
         Training data used for fitting the model.
 
-    xs_ : ndarray of shape (ns_, n_features_in_)    
-        (Unlabeled) Source domain data used for fitting the model.
+    xs_ : ndarray of shape (ns_, n_features_in_)
+        (Unlabeled) source domain data used for fitting the model.
 
     xt_ : ndarray of shape (nt_, n_features_in_)
-        (Unlabeled) Target domain data used for fitting the model.
+        (Unlabeled) target domain data used for fitting the model.
 
     y_mean_ : float
         Mean of the training response variable.
@@ -87,10 +88,10 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     >>> import numpy as np
     >>> from diPLSlib.models import KDAPLS
     >>> x = np.random.rand(100, 10)
-    >>> y = np.random.rand(100,1)
+    >>> y = np.random.rand(100, 1)
     >>> xs = np.random.rand(80, 10)
     >>> xt = np.random.rand(50, 10)
-    >>> model = KDAPLS(A=2, l=0.5, kernel_params={"type":"rbf","gamma":0.001})
+    >>> model = KDAPLS(A=2, l=0.5, kernel_params={"type": "rbf", "gamma": 0.001})
     >>> model.fit(x, y, xs, xt)
     KDAPLS(kernel_params={'gamma': 0.001, 'type': 'rbf'}, l=0.5)
     >>> xtest = np.random.rand(5, 10)
@@ -336,15 +337,14 @@ class DIPLS(RegressorMixin, BaseEstimator):
 
     Parameters
     ----------
+    A : int, default=2
+        Number of latent variables to use in the model.
 
-    A : int
-        Number of latent variables to be used in the model.
-
-    l : float or tuple with len(l)=A, default=0
+    l : float or tuple of length A, default=0
         Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
 
     centering : bool, default=True
-            If True, source and target domain data are mean-centered.
+        If True, source and target domain data are mean-centered.
 
     heuristic : bool, default=False
         If True, the regularization parameter is set to a heuristic value that
@@ -356,16 +356,15 @@ class DIPLS(RegressorMixin, BaseEstimator):
         If target_domain=0, the model applies to the source domain,
         if target_domain=1, it applies to the first target domain, and so on.
 
-    rescale : Union[str, ndarray], default='Target'
-            Determines rescaling of the test data. If 'Target' or 'Source', the test data will be
-            rescaled to the mean of xt or xs, respectively. If an ndarray is provided, the test data
-            will be rescaled to the mean of the provided array.
+    rescale : str or ndarray, default='Target'
+        Determines rescaling of the test data. If 'Target' or 'Source', the test data will be
+        rescaled to the mean of xt or xs, respectively. If an ndarray is provided, the test data
+        will be rescaled to the mean of the provided array.
 
     Attributes
     ----------
-
     n_ : int
-        Number of samples in `x`.
+        Number of samples in `X`.
 
     ns_ : int
         Number of samples in `xs`.
@@ -374,15 +373,15 @@ class DIPLS(RegressorMixin, BaseEstimator):
         Number of samples in `xt`.
 
     n_features_in_ : int
-        Number of features (variables) in `x`.
+        Number of features in `X`.
 
     mu_ : ndarray of shape (n_features,)
-        Mean of columns in `x`.
+        Mean of columns in `X`.
 
     mu_s_ : ndarray of shape (n_features,)
         Mean of columns in `xs`.
 
-    mu_t_ : ndarray of shape (n_features,) or ndarray of shape (n_domains, n_features)
+    mu_t_ : ndarray of shape (n_features,) or list of ndarray
         Mean of columns in `xt`, averaged per target domain if multiple domains exist.
 
     b_ : ndarray of shape (n_features, 1)
@@ -397,65 +396,61 @@ class DIPLS(RegressorMixin, BaseEstimator):
     Ts_ : ndarray of shape (n_source_samples, A)
         Source domain projections (scores).
 
-    Tt_ : ndarray of shape (n_target_samples, A)
+    Tt_ : ndarray of shape (n_target_samples, A) or list of ndarray
         Target domain projections (scores).
 
     W_ : ndarray of shape (n_features, A)
         Weight matrix.
 
     P_ : ndarray of shape (n_features, A)
-        Loadings matrix corresponding to x.
+        Loadings matrix corresponding to X.
 
     Ps_ : ndarray of shape (n_features, A)
         Loadings matrix corresponding to xs.
 
-    Pt_ : ndarray of shape (n_features, A)
+    Pt_ : ndarray of shape (n_features, A) or list of ndarray
         Loadings matrix corresponding to xt.
 
-    E_ : ndarray of shape (n_source_samples, n_features)
-        Residuals of source domain data.
+    E_ : ndarray
+        Residuals of training data.
 
-    Es_ : ndarray of shape (n_source_samples, n_features)
+    Es_ : ndarray
         Source domain residual matrix.
 
-    Et_ : ndarray of shape (n_target_samples, n_features)
+    Et_ : ndarray or list of ndarray
         Target domain residual matrix.
 
-    Ey_ : ndarray of shape (n_source_samples, 1)
+    Ey_ : ndarray
         Residuals of response variable in the source domain.
 
     C_ : ndarray of shape (A, 1)
         Regression vector relating source projections to the response variable.
 
-    opt_l_ : ndarray of shape (A, 1)
+    opt_l_ : ndarray of shape (A,)
         Heuristically determined regularization parameter for each latent variable.
 
-    discrepancy_ : ndarray
+    discrepancy_ : ndarray of shape (A,)
         The variance discrepancy between source and target domain projections.
 
-    is_fitted_ : bool, default=False
+    is_fitted_ : bool
         Whether the model has been fitted to data.
-
 
     References
     ----------
-
     1. Ramin Nikzad-Langerodi et al., "Domain-Invariant Partial Least Squares Regression", Analytical Chemistry, 2018.
     2. Ramin Nikzad-Langerodi et al., "Domain-Invariant Regression under Beer-Lambert's Law", Proc. ICMLA, 2019.
-    3. Ramin Nikzad-Langerodi et al., Domain adaptation for regression under Beer–Lambert’s law, Knowledge-Based Systems, 2020.
+    3. Ramin Nikzad-Langerodi et al., "Domain adaptation for regression under Beer–Lambert’s law", Knowledge-Based Systems, 2020.
     4. B. Mikulasek et al., "Partial least squares regression with multiple domains", Journal of Chemometrics, 2023.
 
     Examples
     --------
-
     >>> import numpy as np
     >>> from diPLSlib.models import DIPLS
     >>> x = np.random.rand(100, 10)
-    >>> y = np.random.rand(100,1)
+    >>> y = np.random.rand(100, 1)
     >>> xs = np.random.rand(100, 10)
     >>> xt = np.random.rand(50, 10)
-    >>> X = np.random.rand(10, 10)
-    >>> model = DIPLS(A=5, l=(10))
+    >>> model = DIPLS(A=5, l=10)
     >>> model.fit(x, y, xs, xt)
     DIPLS(A=5, l=10)
     >>> xtest = np.array([5, 7, 4, 3, 2, 1, 6, 8, 9, 10]).reshape(1, -1)
@@ -684,34 +679,33 @@ class GCTPLS(DIPLS):
     """
     Graph-based Calibration Transfer Partial Least Squares (GCT-PLS).
 
-    This method minimizes the distance betwee source (xs) and target (xt) domain data pairs in the latent variable space
-    while fitting the response. 
+    This method minimizes the distance between source (xs) and target (xt) domain data pairs in the latent variable space
+    while fitting the response.
 
     Parameters
     ----------
+    A : int, default=2
+        Number of latent variables to use in the model.
 
-     l : float or tuple with len(l)=A, default=0
+    l : float or tuple of length A, default=0
         Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
 
     centering : bool, default=True
         If True, source and target domain data are mean-centered before fitting.
-        Centering can be crucial in adjusting data for more effective transfer learning.
 
     heuristic : bool, default=False
         If True, the regularization parameter is set to a heuristic value aimed
         at balancing model fitting quality for the response variable y while minimizing
         discrepancies between domain representations.
 
-    rescale : Union[str, ndarray], default='Target'
+    rescale : str or ndarray, default='Target'
         Determines rescaling of the test data. If 'Target' or 'Source', the test data will be rescaled to the mean of xt or xs, respectively. 
         If an ndarray is provided, the test data will be rescaled to the mean of the provided array.
 
-
     Attributes
     ----------
-
     n_ : int
-        Number of samples in `x`.
+        Number of samples in `X`.
 
     ns_ : int
         Number of samples in `xs`.
@@ -720,10 +714,10 @@ class GCTPLS(DIPLS):
         Number of samples in `xt`.
 
     n_features_in_ : int
-        Number of features (variables) in `x`.
+        Number of features in `X`.
 
     mu_ : ndarray of shape (n_features,)
-        Mean of columns in `x`.
+        Mean of columns in `X`.
 
     mu_s_ : ndarray of shape (n_features,)
         Mean of columns in `xs`.
@@ -750,7 +744,7 @@ class GCTPLS(DIPLS):
         Weight matrix.
 
     P_ : ndarray of shape (n_features, A)
-        Loadings matrix corresponding to x.
+        Loadings matrix corresponding to X.
 
     Ps_ : ndarray of shape (n_features, A)
         Loadings matrix corresponding to xs.
@@ -773,19 +767,17 @@ class GCTPLS(DIPLS):
     C_ : ndarray of shape (A, 1)
         Regression vector relating source projections to the response variable.
 
-    opt_l_ : ndarray of shape (A, 1)
+    opt_l_ : ndarray of shape (A,)
         Heuristically determined regularization parameter for each latent variable.
 
     discrepancy_ : ndarray
         The variance discrepancy between source and target domain projections.
 
-    is_fitted_ : bool, default=False
+    is_fitted_ : bool
         Whether the model has been fitted to data.
-
 
     References
     ----------
-
     Nikzad‐Langerodi, R., & Sobieczky, F. (2021). Graph‐based calibration transfer. 
     Journal of Chemometrics, 35(4), e3319.
 
@@ -797,7 +789,7 @@ class GCTPLS(DIPLS):
     >>> y = np.random.rand(100, 1)
     >>> xs = np.random.rand(80, 10)
     >>> xt = np.random.rand(80, 10)
-    >>> model = GCTPLS(A=3, l=(2,5,7))
+    >>> model = GCTPLS(A=3, l=(2, 5, 7))
     >>> model.fit(x, y, xs, xt)
     GCTPLS(A=3, l=(2, 5, 7))
     >>> xtest = np.array([5, 7, 4, 3, 2, 1, 6, 8, 9, 10]).reshape(1, -1)
@@ -929,74 +921,76 @@ class GCTPLS(DIPLS):
 
 class EDPLS(DIPLS):
     r'''
+    (\epsilon, \delta)-Differentially Private Partial Least Squares Regression.
 
-    :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.
-
-
-    This class implements the  :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).
+    This class implements the (\epsilon, \delta)-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).
 
     Parameters
     ----------
-    
-    A: int
+    A : int, default=2
         Number of latent variables.
-    
-    epsilon : float
+
+    epsilon : float, default=1.0
         Privacy loss parameter.
 
     delta : float, default=0.05
         Failure probability.
 
     centering : bool, default=True
-            If True, the data will be centered before fitting the model.
+        If True, the data will be centered before fitting the model.
 
-    
+    random_state : int, RandomState instance or None, default=None
+        Controls the randomness of the noise added for differential privacy.
+
     Attributes
     ----------
-
-    n_: int
+    n_ : int
         Number of samples in the training data.
 
-    n_features_: int
+    n_features_in_ : int
         Number of features in the training data.
 
-    x_mean_: array, shape (n_features,)
+    x_mean_ : ndarray of shape (n_features,)
         Estimated mean of each feature.
 
-    coef_: array, shape (n_features,)
+    coef_ : ndarray of shape (n_features, 1)
         Estimated regression coefficients.
 
-    y_mean_: float
+    y_mean_ : float
         Estimated intercept.
 
-    x_scores_: array, shape (n, A)
+    x_scores_ : ndarray of shape (n_samples, A)
         X scores.
 
-    x_loadings_: array, shape (n_features, A)
+    x_loadings_ : ndarray of shape (n_features, A)
         X loadings.
 
-    x_weights_: array, shape (n_features, A)
+    x_weights_ : ndarray of shape (n_features, A)
         X weights.
 
-    y_loadings_: array, shape (n_features, A)
+    y_loadings_ : ndarray of shape (A, 1)
         Y loadings.
 
-    is_fitted_: bool
-        True if the model has been fitted.
+    x_residuals_ : ndarray of shape (n_samples, n_features)
+        X residuals.
 
+    y_residuals_ : ndarray of shape (n_samples, 1)
+        Y residuals.
+
+    is_fitted_ : bool
+        True if the model has been fitted.
 
     References
     ----------
-
-    - R.Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (2024, unpublished).
-    - Balle, B., & Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
+    - R. Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).
+    - Balle, B., & Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
 
     Examples
     --------
     >>> from diPLSlib.models import EDPLS
     >>> import numpy as np
     >>> x = np.random.rand(100, 10)
-    >>> y = np.random.rand(100,1)
+    >>> y = np.random.rand(100, 1)
     >>> model = EDPLS(A=5, epsilon=0.1, delta=0.01)
     >>> model.fit(x, y)
     EDPLS(A=5, delta=0.01, epsilon=0.1)

@@ -8,7 +8,8 @@ Domain adaptive partial least squares regression
 ### Added
 - New model class `DAPLS` for (kernel) domain adaptive partial least squares regression.
 - `demo_daPLS.ipynb` notebook for demonstration of the new model class.
-- Documentation for the new model class.
+- Documentation for the new model class included.
+- Usage pattern for the new model class added to the README.
 
 ### Changed
 N/A

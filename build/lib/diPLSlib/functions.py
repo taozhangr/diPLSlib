@@ -14,22 +14,22 @@ from sklearn.utils.validation import check_array
 from diPLSlib.utils.misc import calibrateAnalyticGaussianMechanism
 
 
-def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt, 
-           A:int, 
+def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt, 
+           A: int, 
            l, 
-           kernel_params:dict={"type":"rbf","gamma":10}):
+           kernel_params: dict = {"type": "rbf", "gamma": 10}):
     r'''
     Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.
 
     This method fits a Kernel PLS regression model using labeled source domain data and potentially 
-    unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions. 
+    unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions.
 
     Mathematically, for each latent variable (LV), kda‐PLS finds a weight vector :math:`\mathbf{w}` (with :math:`\mathbf{w}^T\mathbf{w} = 1`) that maximizes
 
     .. math::
-        \max_{\mathbf{w} : \, \mathbf{w}^T\mathbf{w} = 1} \; \Biggl(
-        \mathbf{w}^T K(X_s, X_s)^T \, Y Y^T \, K(X_s, X_s) \, \mathbf{w}
-        \;-\; \gamma \, \mathbf{w}^T K(X_{st}, X_s)^T \, H L H \, K(X_{st}, X_s) \, \mathbf{w}
+        \max_{\mathbf{w} : \mathbf{w}^T\mathbf{w} = 1} \Biggl(
+        \mathbf{w}^T K(X_s, X_s)^T Y Y^T K(X_s, X_s) \mathbf{w}
+        - \gamma \mathbf{w}^T K(X_{st}, X_s)^T H L H K(X_{st}, X_s) \mathbf{w}
         \Biggr),
 
     where
@@ -39,7 +39,7 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
     - :math:`Y` is the response variable,
     - :math:`H` denotes the centering matrix,
     - :math:`L` is the Laplacian matrix defined such that :math:`L_{ij}=1` if the i-th and j-th sample in :math:`X_{st}` belong to the same domain and 0 otherwise,
-    - and :math:`\gamma` is the regularization parameter that balances maximizing the covariance between :math:`K(X_s, X_s)` and :math:`Y` with minimizing the domain discrepancy.
+    - :math:`\gamma` is the regularization parameter that balances maximizing the covariance between :math:`K(X_s, X_s)` and :math:`Y` with minimizing the domain discrepancy.
 
     Parameters
     ----------
@@ -58,10 +58,10 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
     A : int
         Number of latent variables to use in the model.
 
-    l : float or tuple of len(l)=A
+    l : float or tuple of length A
         Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
 
-    kernel_params : dict, default={"type":"rbf","gamma":10}
+    kernel_params : dict, default={"type": "rbf", "gamma": 10}
         Kernel parameters. The dictionary must contain the following keys:
         - "type": str, default="rbf"
             Type of kernel to use. Supported types are "rbf", "linear", and "primal".
@@ -82,6 +82,30 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
     Tst : ndarray of shape (n_source_samples + n_target_samples, A)
         Source and target domain projections (scores).
 
+    W : ndarray of shape (m, A)
+        Weight matrix.
+
+    P : ndarray of shape (m, A)
+        Loadings matrix for source domain.
+
+    Pst : ndarray of shape (m, A)
+        Loadings matrix for source and target domains.
+
+    E : ndarray
+        Residuals for source domain.
+
+    Est : ndarray
+        Residuals for source and target domains.
+
+    Ey : ndarray
+        Residuals of response variable.
+
+    C : ndarray of shape (A, q)
+        Regression vector relating projections to the response variable.
+
+    centering : dict
+        Dictionary containing centering information.
+
     References
     ----------
     1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., & Shi, W. (2020). Domain adaptive partial least squares regression. Chemometrics and Intelligent Laboratory Systems, 201, 103986.
@@ -94,9 +118,8 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
     >>> y = np.random.random((100, 1))
     >>> xs = np.random.random((50, 10))
     >>> xt = np.random.random((50, 10))
-    >>> b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, (0.5)) 
+    >>> b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, 0.5)
     '''
-
     # Input validation
     x = check_array(x, dtype=np.float64)
     xs = check_array(xs, dtype=np.float64)
@@ -274,7 +297,6 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
     Parameters
     ----------
-
     x : ndarray of shape (n_samples, n_features)
         Labeled source domain data.
 
@@ -290,7 +312,7 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
     A : int
         Number of latent variables to use in the model.
 
-    l : float or tuple of len(l)=A
+    l : float or tuple of length A
         Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
 
     heuristic : bool, default=False
@@ -306,12 +328,8 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
     Returns
     -------
-
     b : ndarray of shape (n_features, 1)
         Regression coefficient vector.
-
-    b0 : float
-        Intercept of the regression model.
 
     T : ndarray of shape (n_samples, A)
         Training data projections (scores).
@@ -319,7 +337,7 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
     Ts : ndarray of shape (n_source_samples, A)
         Source domain projections (scores).
 
-    Tt : ndarray of shape (n_target_samples, A)
+    Tt : ndarray of shape (n_target_samples, A) or list of ndarray
         Target domain projections (scores).
 
     W : ndarray of shape (n_features, A)
@@ -331,50 +349,47 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
     Ps : ndarray of shape (n_features, A)
         Loadings matrix corresponding to xs.
 
-    Pt : ndarray of shape (n_features, A)
+    Pt : ndarray of shape (n_features, A) or list of ndarray
         Loadings matrix corresponding to xt.
 
-    E : ndarray of shape (n_source_samples, n_features)
-        Residuals of source domain data.
+    E : ndarray
+        Residuals of training data.
 
-    Es : ndarray of shape (n_source_samples, n_features)
+    Es : ndarray
         Source domain residual matrix.
 
-    Et : ndarray of shape (n_target_samples, n_features)
+    Et : ndarray or list of ndarray
         Target domain residual matrix.
 
-    Ey : ndarray of shape (n_source_samples, 1)
+    Ey : ndarray
         Residuals of response variable in the source domain.
 
     C : ndarray of shape (A, 1)
         Regression vector relating source projections to the response variable.
 
-    opt_l : ndarray of shape (A, 1)
+    opt_l : ndarray of shape (A,)
         Heuristically determined regularization parameter for each latent variable.
 
-    discrepancy : ndarray
+    discrepancy : ndarray of shape (A,)
         The variance discrepancy between source and target domain projections.
 
     References
     ----------
-
     1. Ramin Nikzad-Langerodi et al., "Domain-Invariant Partial Least Squares Regression", Analytical Chemistry, 2018.
     2. Ramin Nikzad-Langerodi et al., "Domain-Invariant Regression under Beer-Lambert's Law", Proc. ICMLA, 2019.
-    3. Ramin Nikzad-Langerodi et al., Domain adaptation for regression under Beer–Lambert’s law, Knowledge-Based Systems, 2020.
+    3. Ramin Nikzad-Langerodi et al., "Domain adaptation for regression under Beer–Lambert’s law", Knowledge-Based Systems, 2020.
     4. B. Mikulasek et al., "Partial least squares regression with multiple domains", Journal of Chemometrics, 2023.
 
     Examples
     --------
-
     >>> import numpy as np
     >>> from diPLSlib.functions import dipals
     >>> x = np.random.random((100, 10))
     >>> y = np.random.random((100, 1))
     >>> xs = np.random.random((50, 10))
     >>> xt = np.random.random((50, 10))
-    >>> b, T, Ts, Tt, W, P, Ps, Pt, E, Es, Et, Ey, C, opt_l, discrepancy = dipals(x, y, xs, xt, 2, (0.1))
+    >>> b, T, Ts, Tt, W, P, Ps, Pt, E, Es, Et, Ey, C, opt_l, discrepancy = dipals(x, y, xs, xt, 2, 0.1)
     """
-
     # Get array dimensions
     (n, k) = np.shape(x)
     (ns, k) = np.shape(xs)
@@ -624,7 +639,6 @@ def convex_relaxation(xs, xt):
 
     Parameters
     ----------
-
     xs : ndarray of shape (n_source_samples, n_features)
         Feature data from the source domain.
 
@@ -633,25 +647,21 @@ def convex_relaxation(xs, xt):
 
     Returns
     -------
-
     D : ndarray of shape (n_features, n_features)
         Relaxed covariance difference matrix.
 
     References
     ----------
-
     Ramin Nikzad-Langerodi et al., "Domain-Invariant Regression under Beer-Lambert's Law", Proc. ICMLA, 2019.
 
     Examples
     --------
-
     >>> import numpy as np
     >>> from diPLSlib.functions import convex_relaxation
     >>> xs = np.random.random((100, 10))
     >>> xt = np.random.random((100, 10))
     >>> D = convex_relaxation(xs, xt)
     """
-
     # Ensure input arrays are numerical
     xs = np.asarray(xs, dtype=np.float64)
     xt = np.asarray(xt, dtype=np.float64)
@@ -688,7 +698,6 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-
     x : ndarray of shape (n_samples, n_features)
         Data samples from device 1.
 
@@ -702,13 +711,11 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     References
     ----------
-
     Nikzad‐Langerodi, R., & Sobieczky, F. (2021). Graph‐based calibration transfer. 
     Journal of Chemometrics, 35(4), e3319.
 
     Examples
     --------
-
     >>> import numpy as np
     >>> from diPLSlib.functions import transfer_laplacian
     >>> x = np.array([[1, 2], [3, 4]])
@@ -720,7 +727,6 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
      [-1. -0.  1.  0.]
      [-0. -1.  0.  1.]]
     """
-
     (n, p) = np.shape(x)
     I = np.eye(n)
     L = np.vstack([np.hstack([I,-I]),np.hstack([-I,I])])
@@ -728,18 +734,18 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return L
 
 
-def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:float=0.05, rng=None):
+def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta: float = 0.05, rng=None):
     r'''
-    :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.
+    (\epsilon, \delta)-Differentially Private Partial Least Squares Regression.
 
-    A Gaussian mechanism according to Balle & Wang (2018) is used to privately release weights :math:`\mathbf{W}`, scores :math:`\mathbf{T}`
-    and :math:`X/Y`-loadings :math:`\mathbf{P}`/:math:`\mathbf{c}` from the PLS1 algorithm. To this end, for each latent variable, i.i.d. noise from 
+    A Gaussian mechanism according to Balle & Wang (2018) is used to privately release weights :math:`\mathbf{W}`, scores :math:`\mathbf{T}`,
+    and :math:`X/Y`-loadings :math:`\mathbf{P}`/:math:`\mathbf{c}` from the PLS1 algorithm. For each latent variable, i.i.d. noise from 
     :math:`\mathcal{N}(0,\sigma^2)` with variance satisfying
-    
-    .. math::
-           \Phi\left( \\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right) - e^{\epsilon} \Phi\left( -\\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right)\leq \delta,
 
-    with :math:`\Phi(t) = \mathrm P[\mathcal{N}(0,1)\leq t]` (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores and loadings, whereas the sensitivity :math:`\Delta(\cdot)` for the functions releasing the corresponding quantities is calculated as follows:
+    .. math::
+        \Phi\left( \frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right) - e^{\epsilon} \Phi\left( -\frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right)\leq \delta,
+
+    with :math:`\Phi(t) = \mathrm{P}[\mathcal{N}(0,1)\leq t]` (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores, and loadings, whereas the sensitivity :math:`\Delta(\cdot)` for the functions releasing the corresponding quantities is calculated as follows:
 
     .. math::
         \Delta(w) = \sup_{(\mathbf{x}, y)} |y| \|\mathbf{x}\|_2
@@ -752,66 +758,60 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
 
     .. math::
         \Delta(c) \leq \sup_{y}  |y|.
-    
-    Note that in contrast to the Gaussian mechanism, proposed in Dwork et al. (2006) and Dwork et al. (2014), the mechanism of Balle & Wang (2018) guarantees :math:`(\epsilon, \delta)`-differential privacy 
+
+    Note that in contrast to the Gaussian mechanism proposed in Dwork et al. (2006) and Dwork et al. (2014), the mechanism of Balle & Wang (2018) guarantees :math:`(\epsilon, \delta)`-differential privacy 
     for any value of :math:`\epsilon > 0` and not only for :math:`\epsilon \leq 1`.
 
     Parameters
     ----------
+    x : ndarray of shape (n_samples, n_features)
+        Input data.
 
-    x: numpy array of shape (n, m)
-        x-data
+    y : ndarray of shape (n_samples, n_targets)
+        Target values.
 
-    y: numpy array of shape (n, p)
-
-
-    n_components: int
+    n_components : int
         Number of latent variables.
 
-    epsilon: float
+    epsilon : float
         Privacy loss parameter.
 
-    delta: float, default=0.05
+    delta : float, default=0.05
         Failure probability.
 
-    rng: numpy.random.Generator, optional
+    rng : numpy.random.Generator, optional
         Random number generator.
-
 
     Returns
     -------
-
-    coef_: numpy array of shape (m,)
+    coef_ : ndarray of shape (n_features, n_targets)
         Regression coefficients.
 
-    x_scores_: numpy array of shape (n, A)
-        X scores.
-
-    x_loadings_: numpy array of shape (m, A)
-        X loadings.
-
-    x_weights_: numpy array of shape (m, A)
+    x_weights_ : ndarray of shape (n_features, n_components)
         X weights.
 
-    y_loadings_: numpy array of shape (A, )
+    x_loadings_ : ndarray of shape (n_features, n_components)
+        X loadings.
+
+    y_loadings_ : ndarray of shape (n_components, n_targets)
         Y loadings.
 
-    x_residuals: numpy array of shape (n, m)
+    x_scores_ : ndarray of shape (n_samples, n_components)
+        X scores.
+
+    x_residuals_ : ndarray of shape (n_samples, n_features)
         X residuals.
 
-    y_residuals: numpy array of shape (n, p)
+    y_residuals_ : ndarray of shape (n_samples, n_targets)
         Y residuals.
 
-    
     References
     ----------
-
-    - R.Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (2024, unpublished).
-    - Balle, B., & Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
+    - R. Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).
+    - Balle, B., & Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
 
     Examples
     --------
-
     >>> from diPLSlib.functions import edpls
     >>> import numpy as np
     >>> x = np.random.rand(100, 10)

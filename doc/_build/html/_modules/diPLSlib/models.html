@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>diPLSlib.models &mdash; diPLSlib 2.4.2 documentation</title>
+  <title>diPLSlib.models &mdash; diPLSlib 2.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=de1351e5"></script>
+      <script src="../../_static/documentation_options.js?v=3c4615cf"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -75,6 +75,8 @@
 
 <span class="sd">- DIPLS base class</span>
 <span class="sd">- GCTPLS class</span>
+<span class="sd">- EDPLS class</span>
+<span class="sd">- KDAPLS class</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
 <span class="c1"># Modules</span>
@@ -98,7 +100,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.</span>
 
-<span class="sd">    This class implements KDAPLS by calling the &#39;kdapls&#39; function from &#39;functions.py&#39;.</span>
+<span class="sd">    This class implements KDAPLS by calling the `kdapls` function from `functions.py`.</span>
 <span class="sd">    KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS) and aligns domains in that space while fitting the regression model on labeled data.</span>
 
 <span class="sd">    Parameters</span>
@@ -107,8 +109,7 @@
 <span class="sd">        Number of latent variables to use in the model.</span>
 
 <span class="sd">    l : float or tuple, default=0</span>
-<span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied</span>
-<span class="sd">        to all latent variables.</span>
+<span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</span>
 
 <span class="sd">    kernel_params : dict, optional</span>
 <span class="sd">        Dictionary specifying the kernel type and parameters. Accepted keys:</span>
@@ -118,15 +119,15 @@
 <span class="sd">            Kernel coefficient for RBF kernels.</span>
 
 <span class="sd">    target_domain : int, default=0</span>
-<span class="sd">        Chooses which domain&#39;s coefficient vector is used for predictions.</span>
+<span class="sd">        Specifies which domain&#39;s coefficient vector is used for predictions.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    n_ : int</span>
-<span class="sd">        Number of samples in `x`.</span>
+<span class="sd">        Number of samples in `X`.</span>
 
 <span class="sd">    n_features_in_ : int</span>
-<span class="sd">        Number of features (variables) in `x`.</span>
+<span class="sd">        Number of features in `X`.</span>
 
 <span class="sd">    ns_ : int</span>
 <span class="sd">        Number of samples in `xs`.</span>
@@ -140,11 +141,11 @@
 <span class="sd">    X_ : ndarray of shape (n_, n_features_in_)</span>
 <span class="sd">        Training data used for fitting the model.</span>
 
-<span class="sd">    xs_ : ndarray of shape (ns_, n_features_in_)    </span>
-<span class="sd">        (Unlabeled) Source domain data used for fitting the model.</span>
+<span class="sd">    xs_ : ndarray of shape (ns_, n_features_in_)</span>
+<span class="sd">        (Unlabeled) source domain data used for fitting the model.</span>
 
 <span class="sd">    xt_ : ndarray of shape (nt_, n_features_in_)</span>
-<span class="sd">        (Unlabeled) Target domain data used for fitting the model.</span>
+<span class="sd">        (Unlabeled) target domain data used for fitting the model.</span>
 
 <span class="sd">    y_mean_ : float</span>
 <span class="sd">        Mean of the training response variable.</span>
@@ -160,10 +161,10 @@
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; from diPLSlib.models import KDAPLS</span>
 <span class="sd">    &gt;&gt;&gt; x = np.random.rand(100, 10)</span>
-<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100,1)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100, 1)</span>
 <span class="sd">    &gt;&gt;&gt; xs = np.random.rand(80, 10)</span>
 <span class="sd">    &gt;&gt;&gt; xt = np.random.rand(50, 10)</span>
-<span class="sd">    &gt;&gt;&gt; model = KDAPLS(A=2, l=0.5, kernel_params={&quot;type&quot;:&quot;rbf&quot;,&quot;gamma&quot;:0.001})</span>
+<span class="sd">    &gt;&gt;&gt; model = KDAPLS(A=2, l=0.5, kernel_params={&quot;type&quot;: &quot;rbf&quot;, &quot;gamma&quot;: 0.001})</span>
 <span class="sd">    &gt;&gt;&gt; model.fit(x, y, xs, xt)</span>
 <span class="sd">    KDAPLS(kernel_params={&#39;gamma&#39;: 0.001, &#39;type&#39;: &#39;rbf&#39;}, l=0.5)</span>
 <span class="sd">    &gt;&gt;&gt; xtest = np.random.rand(5, 10)</span>
@@ -418,15 +419,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    A : int, default=2</span>
+<span class="sd">        Number of latent variables to use in the model.</span>
 
-<span class="sd">    A : int</span>
-<span class="sd">        Number of latent variables to be used in the model.</span>
-
-<span class="sd">    l : float or tuple with len(l)=A, default=0</span>
+<span class="sd">    l : float or tuple of length A, default=0</span>
 <span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</span>
 
 <span class="sd">    centering : bool, default=True</span>
-<span class="sd">            If True, source and target domain data are mean-centered.</span>
+<span class="sd">        If True, source and target domain data are mean-centered.</span>
 
 <span class="sd">    heuristic : bool, default=False</span>
 <span class="sd">        If True, the regularization parameter is set to a heuristic value that</span>
@@ -438,16 +438,15 @@
 <span class="sd">        If target_domain=0, the model applies to the source domain,</span>
 <span class="sd">        if target_domain=1, it applies to the first target domain, and so on.</span>
 
-<span class="sd">    rescale : Union[str, ndarray], default=&#39;Target&#39;</span>
-<span class="sd">            Determines rescaling of the test data. If &#39;Target&#39; or &#39;Source&#39;, the test data will be</span>
-<span class="sd">            rescaled to the mean of xt or xs, respectively. If an ndarray is provided, the test data</span>
-<span class="sd">            will be rescaled to the mean of the provided array.</span>
+<span class="sd">    rescale : str or ndarray, default=&#39;Target&#39;</span>
+<span class="sd">        Determines rescaling of the test data. If &#39;Target&#39; or &#39;Source&#39;, the test data will be</span>
+<span class="sd">        rescaled to the mean of xt or xs, respectively. If an ndarray is provided, the test data</span>
+<span class="sd">        will be rescaled to the mean of the provided array.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    n_ : int</span>
-<span class="sd">        Number of samples in `x`.</span>
+<span class="sd">        Number of samples in `X`.</span>
 
 <span class="sd">    ns_ : int</span>
 <span class="sd">        Number of samples in `xs`.</span>
@@ -456,15 +455,15 @@
 <span class="sd">        Number of samples in `xt`.</span>
 
 <span class="sd">    n_features_in_ : int</span>
-<span class="sd">        Number of features (variables) in `x`.</span>
+<span class="sd">        Number of features in `X`.</span>
 
 <span class="sd">    mu_ : ndarray of shape (n_features,)</span>
-<span class="sd">        Mean of columns in `x`.</span>
+<span class="sd">        Mean of columns in `X`.</span>
 
 <span class="sd">    mu_s_ : ndarray of shape (n_features,)</span>
 <span class="sd">        Mean of columns in `xs`.</span>
 
-<span class="sd">    mu_t_ : ndarray of shape (n_features,) or ndarray of shape (n_domains, n_features)</span>
+<span class="sd">    mu_t_ : ndarray of shape (n_features,) or list of ndarray</span>
 <span class="sd">        Mean of columns in `xt`, averaged per target domain if multiple domains exist.</span>
 
 <span class="sd">    b_ : ndarray of shape (n_features, 1)</span>
@@ -479,65 +478,61 @@
 <span class="sd">    Ts_ : ndarray of shape (n_source_samples, A)</span>
 <span class="sd">        Source domain projections (scores).</span>
 
-<span class="sd">    Tt_ : ndarray of shape (n_target_samples, A)</span>
+<span class="sd">    Tt_ : ndarray of shape (n_target_samples, A) or list of ndarray</span>
 <span class="sd">        Target domain projections (scores).</span>
 
 <span class="sd">    W_ : ndarray of shape (n_features, A)</span>
 <span class="sd">        Weight matrix.</span>
 
 <span class="sd">    P_ : ndarray of shape (n_features, A)</span>
-<span class="sd">        Loadings matrix corresponding to x.</span>
+<span class="sd">        Loadings matrix corresponding to X.</span>
 
 <span class="sd">    Ps_ : ndarray of shape (n_features, A)</span>
 <span class="sd">        Loadings matrix corresponding to xs.</span>
 
-<span class="sd">    Pt_ : ndarray of shape (n_features, A)</span>
+<span class="sd">    Pt_ : ndarray of shape (n_features, A) or list of ndarray</span>
 <span class="sd">        Loadings matrix corresponding to xt.</span>
 
-<span class="sd">    E_ : ndarray of shape (n_source_samples, n_features)</span>
-<span class="sd">        Residuals of source domain data.</span>
+<span class="sd">    E_ : ndarray</span>
+<span class="sd">        Residuals of training data.</span>
 
-<span class="sd">    Es_ : ndarray of shape (n_source_samples, n_features)</span>
+<span class="sd">    Es_ : ndarray</span>
 <span class="sd">        Source domain residual matrix.</span>
 
-<span class="sd">    Et_ : ndarray of shape (n_target_samples, n_features)</span>
+<span class="sd">    Et_ : ndarray or list of ndarray</span>
 <span class="sd">        Target domain residual matrix.</span>
 
-<span class="sd">    Ey_ : ndarray of shape (n_source_samples, 1)</span>
+<span class="sd">    Ey_ : ndarray</span>
 <span class="sd">        Residuals of response variable in the source domain.</span>
 
 <span class="sd">    C_ : ndarray of shape (A, 1)</span>
 <span class="sd">        Regression vector relating source projections to the response variable.</span>
 
-<span class="sd">    opt_l_ : ndarray of shape (A, 1)</span>
+<span class="sd">    opt_l_ : ndarray of shape (A,)</span>
 <span class="sd">        Heuristically determined regularization parameter for each latent variable.</span>
 
-<span class="sd">    discrepancy_ : ndarray</span>
+<span class="sd">    discrepancy_ : ndarray of shape (A,)</span>
 <span class="sd">        The variance discrepancy between source and target domain projections.</span>
 
-<span class="sd">    is_fitted_ : bool, default=False</span>
+<span class="sd">    is_fitted_ : bool</span>
 <span class="sd">        Whether the model has been fitted to data.</span>
-
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    1. Ramin Nikzad-Langerodi et al., &quot;Domain-Invariant Partial Least Squares Regression&quot;, Analytical Chemistry, 2018.</span>
 <span class="sd">    2. Ramin Nikzad-Langerodi et al., &quot;Domain-Invariant Regression under Beer-Lambert&#39;s Law&quot;, Proc. ICMLA, 2019.</span>
-<span class="sd">    3. Ramin Nikzad-Langerodi et al., Domain adaptation for regression under Beer–Lambert’s law, Knowledge-Based Systems, 2020.</span>
+<span class="sd">    3. Ramin Nikzad-Langerodi et al., &quot;Domain adaptation for regression under Beer–Lambert’s law&quot;, Knowledge-Based Systems, 2020.</span>
 <span class="sd">    4. B. Mikulasek et al., &quot;Partial least squares regression with multiple domains&quot;, Journal of Chemometrics, 2023.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; from diPLSlib.models import DIPLS</span>
 <span class="sd">    &gt;&gt;&gt; x = np.random.rand(100, 10)</span>
-<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100,1)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100, 1)</span>
 <span class="sd">    &gt;&gt;&gt; xs = np.random.rand(100, 10)</span>
 <span class="sd">    &gt;&gt;&gt; xt = np.random.rand(50, 10)</span>
-<span class="sd">    &gt;&gt;&gt; X = np.random.rand(10, 10)</span>
-<span class="sd">    &gt;&gt;&gt; model = DIPLS(A=5, l=(10))</span>
+<span class="sd">    &gt;&gt;&gt; model = DIPLS(A=5, l=10)</span>
 <span class="sd">    &gt;&gt;&gt; model.fit(x, y, xs, xt)</span>
 <span class="sd">    DIPLS(A=5, l=10)</span>
 <span class="sd">    &gt;&gt;&gt; xtest = np.array([5, 7, 4, 3, 2, 1, 6, 8, 9, 10]).reshape(1, -1)</span>
@@ -775,34 +770,33 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Graph-based Calibration Transfer Partial Least Squares (GCT-PLS).</span>
 
-<span class="sd">    This method minimizes the distance betwee source (xs) and target (xt) domain data pairs in the latent variable space</span>
-<span class="sd">    while fitting the response. </span>
+<span class="sd">    This method minimizes the distance between source (xs) and target (xt) domain data pairs in the latent variable space</span>
+<span class="sd">    while fitting the response.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    A : int, default=2</span>
+<span class="sd">        Number of latent variables to use in the model.</span>
 
-<span class="sd">     l : float or tuple with len(l)=A, default=0</span>
+<span class="sd">    l : float or tuple of length A, default=0</span>
 <span class="sd">        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.</span>
 
 <span class="sd">    centering : bool, default=True</span>
 <span class="sd">        If True, source and target domain data are mean-centered before fitting.</span>
-<span class="sd">        Centering can be crucial in adjusting data for more effective transfer learning.</span>
 
 <span class="sd">    heuristic : bool, default=False</span>
 <span class="sd">        If True, the regularization parameter is set to a heuristic value aimed</span>
 <span class="sd">        at balancing model fitting quality for the response variable y while minimizing</span>
 <span class="sd">        discrepancies between domain representations.</span>
 
-<span class="sd">    rescale : Union[str, ndarray], default=&#39;Target&#39;</span>
+<span class="sd">    rescale : str or ndarray, default=&#39;Target&#39;</span>
 <span class="sd">        Determines rescaling of the test data. If &#39;Target&#39; or &#39;Source&#39;, the test data will be rescaled to the mean of xt or xs, respectively. </span>
 <span class="sd">        If an ndarray is provided, the test data will be rescaled to the mean of the provided array.</span>
 
-
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    n_ : int</span>
-<span class="sd">        Number of samples in `x`.</span>
+<span class="sd">        Number of samples in `X`.</span>
 
 <span class="sd">    ns_ : int</span>
 <span class="sd">        Number of samples in `xs`.</span>
@@ -811,10 +805,10 @@
 <span class="sd">        Number of samples in `xt`.</span>
 
 <span class="sd">    n_features_in_ : int</span>
-<span class="sd">        Number of features (variables) in `x`.</span>
+<span class="sd">        Number of features in `X`.</span>
 
 <span class="sd">    mu_ : ndarray of shape (n_features,)</span>
-<span class="sd">        Mean of columns in `x`.</span>
+<span class="sd">        Mean of columns in `X`.</span>
 
 <span class="sd">    mu_s_ : ndarray of shape (n_features,)</span>
 <span class="sd">        Mean of columns in `xs`.</span>
@@ -841,7 +835,7 @@
 <span class="sd">        Weight matrix.</span>
 
 <span class="sd">    P_ : ndarray of shape (n_features, A)</span>
-<span class="sd">        Loadings matrix corresponding to x.</span>
+<span class="sd">        Loadings matrix corresponding to X.</span>
 
 <span class="sd">    Ps_ : ndarray of shape (n_features, A)</span>
 <span class="sd">        Loadings matrix corresponding to xs.</span>
@@ -864,19 +858,17 @@
 <span class="sd">    C_ : ndarray of shape (A, 1)</span>
 <span class="sd">        Regression vector relating source projections to the response variable.</span>
 
-<span class="sd">    opt_l_ : ndarray of shape (A, 1)</span>
+<span class="sd">    opt_l_ : ndarray of shape (A,)</span>
 <span class="sd">        Heuristically determined regularization parameter for each latent variable.</span>
 
 <span class="sd">    discrepancy_ : ndarray</span>
 <span class="sd">        The variance discrepancy between source and target domain projections.</span>
 
-<span class="sd">    is_fitted_ : bool, default=False</span>
+<span class="sd">    is_fitted_ : bool</span>
 <span class="sd">        Whether the model has been fitted to data.</span>
-
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    Nikzad‐Langerodi, R., &amp; Sobieczky, F. (2021). Graph‐based calibration transfer. </span>
 <span class="sd">    Journal of Chemometrics, 35(4), e3319.</span>
 
@@ -888,7 +880,7 @@
 <span class="sd">    &gt;&gt;&gt; y = np.random.rand(100, 1)</span>
 <span class="sd">    &gt;&gt;&gt; xs = np.random.rand(80, 10)</span>
 <span class="sd">    &gt;&gt;&gt; xt = np.random.rand(80, 10)</span>
-<span class="sd">    &gt;&gt;&gt; model = GCTPLS(A=3, l=(2,5,7))</span>
+<span class="sd">    &gt;&gt;&gt; model = GCTPLS(A=3, l=(2, 5, 7))</span>
 <span class="sd">    &gt;&gt;&gt; model.fit(x, y, xs, xt)</span>
 <span class="sd">    GCTPLS(A=3, l=(2, 5, 7))</span>
 <span class="sd">    &gt;&gt;&gt; xtest = np.array([5, 7, 4, 3, 2, 1, 6, 8, 9, 10]).reshape(1, -1)</span>
@@ -1026,74 +1018,76 @@
 <a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.models.EDPLS">[docs]</a>
 <span class="k">class</span> <span class="nc">EDPLS</span><span class="p">(</span><span class="n">DIPLS</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    (\epsilon, \delta)-Differentially Private Partial Least Squares Regression.</span>
 
-<span class="sd">    :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.</span>
-
-
-<span class="sd">    This class implements the  :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).</span>
+<span class="sd">    This class implements the (\epsilon, \delta)-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    </span>
-<span class="sd">    A: int</span>
+<span class="sd">    A : int, default=2</span>
 <span class="sd">        Number of latent variables.</span>
-<span class="sd">    </span>
-<span class="sd">    epsilon : float</span>
+
+<span class="sd">    epsilon : float, default=1.0</span>
 <span class="sd">        Privacy loss parameter.</span>
 
 <span class="sd">    delta : float, default=0.05</span>
 <span class="sd">        Failure probability.</span>
 
 <span class="sd">    centering : bool, default=True</span>
-<span class="sd">            If True, the data will be centered before fitting the model.</span>
+<span class="sd">        If True, the data will be centered before fitting the model.</span>
 
-<span class="sd">    </span>
+<span class="sd">    random_state : int, RandomState instance or None, default=None</span>
+<span class="sd">        Controls the randomness of the noise added for differential privacy.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-
-<span class="sd">    n_: int</span>
+<span class="sd">    n_ : int</span>
 <span class="sd">        Number of samples in the training data.</span>
 
-<span class="sd">    n_features_: int</span>
+<span class="sd">    n_features_in_ : int</span>
 <span class="sd">        Number of features in the training data.</span>
 
-<span class="sd">    x_mean_: array, shape (n_features,)</span>
+<span class="sd">    x_mean_ : ndarray of shape (n_features,)</span>
 <span class="sd">        Estimated mean of each feature.</span>
 
-<span class="sd">    coef_: array, shape (n_features,)</span>
+<span class="sd">    coef_ : ndarray of shape (n_features, 1)</span>
 <span class="sd">        Estimated regression coefficients.</span>
 
-<span class="sd">    y_mean_: float</span>
+<span class="sd">    y_mean_ : float</span>
 <span class="sd">        Estimated intercept.</span>
 
-<span class="sd">    x_scores_: array, shape (n, A)</span>
+<span class="sd">    x_scores_ : ndarray of shape (n_samples, A)</span>
 <span class="sd">        X scores.</span>
 
-<span class="sd">    x_loadings_: array, shape (n_features, A)</span>
+<span class="sd">    x_loadings_ : ndarray of shape (n_features, A)</span>
 <span class="sd">        X loadings.</span>
 
-<span class="sd">    x_weights_: array, shape (n_features, A)</span>
+<span class="sd">    x_weights_ : ndarray of shape (n_features, A)</span>
 <span class="sd">        X weights.</span>
 
-<span class="sd">    y_loadings_: array, shape (n_features, A)</span>
+<span class="sd">    y_loadings_ : ndarray of shape (A, 1)</span>
 <span class="sd">        Y loadings.</span>
 
-<span class="sd">    is_fitted_: bool</span>
-<span class="sd">        True if the model has been fitted.</span>
+<span class="sd">    x_residuals_ : ndarray of shape (n_samples, n_features)</span>
+<span class="sd">        X residuals.</span>
 
+<span class="sd">    y_residuals_ : ndarray of shape (n_samples, 1)</span>
+<span class="sd">        Y residuals.</span>
+
+<span class="sd">    is_fitted_ : bool</span>
+<span class="sd">        True if the model has been fitted.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-
-<span class="sd">    - R.Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (2024, unpublished).</span>
-<span class="sd">    - Balle, B., &amp; Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</span>
+<span class="sd">    - R. Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).</span>
+<span class="sd">    - Balle, B., &amp; Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from diPLSlib.models import EDPLS</span>
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; x = np.random.rand(100, 10)</span>
-<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100,1)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100, 1)</span>
 <span class="sd">    &gt;&gt;&gt; model = EDPLS(A=5, epsilon=0.1, delta=0.01)</span>
 <span class="sd">    &gt;&gt;&gt; model.fit(x, y)</span>
 <span class="sd">    EDPLS(A=5, delta=0.01, epsilon=0.1)</span>
@@ -1249,7 +1243,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Ramin Nikzad-Langerodi.</p>
+    <p>&#169; Copyright 2025, Ramin Nikzad-Langerodi.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
