@@ -249,13 +249,13 @@ samples in latent variable space.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="diPLSlib.functions.edpls">
-<span class="sig-prename descclassname"><span class="pre">diPLSlib.functions.</span></span><span class="sig-name descname"><span class="pre">edpls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/functions.html#edpls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.functions.edpls" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">diPLSlib.functions.</span></span><span class="sig-name descname"><span class="pre">edpls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/functions.html#edpls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.functions.edpls" title="Link to this definition"></a></dt>
 <dd><p><span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares Regression.</p>
 <p>A Gaussian mechanism according to Balle &amp; Wang (2018) is used to privately release weights <span class="math notranslate nohighlight">\(\mathbf{W}\)</span>, scores <span class="math notranslate nohighlight">\(\mathbf{T}\)</span>
 and <span class="math notranslate nohighlight">\(X/Y\)</span>-loadings <span class="math notranslate nohighlight">\(\mathbf{P}\)</span>/<span class="math notranslate nohighlight">\(\mathbf{c}\)</span> from the PLS1 algorithm. To this end, for each latent variable, i.i.d. noise from 
 <span class="math notranslate nohighlight">\(\mathcal{N}(0,\sigma^2)\)</span> with variance satisfying</p>
 <div class="math notranslate nohighlight">
-\[\Phi\left( \frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right) - e^{\epsilon} \Phi\left( -\frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right)\leq \delta,\]</div>
+\[\begin{split}\Phi\left( \\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right) - e^{\epsilon} \Phi\left( -\\frac{\Delta}{2\sigma} - \\frac{\epsilon\sigma}{\Delta} \\right)\leq \delta,\end{split}\]</div>
 <p>with <span class="math notranslate nohighlight">\(\Phi(t) = \mathrm P[\mathcal{N}(0,1)\leq t]\)</span> (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores and loadings, whereas the sensitivity <span class="math notranslate nohighlight">\(\Delta(\cdot)\)</span> for the functions releasing the corresponding quantities is calculated as follows:</p>
 <div class="math notranslate nohighlight">
 \[\Delta(w) = \sup_{(\mathbf{x}, y)} |y| \|\mathbf{x}\|_2\]</div>
@@ -279,6 +279,8 @@ for any value of <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)<
 </dd>
 <dt><strong>delta: float, default=0.05</strong></dt><dd><p>Failure probability.</p>
 </dd>
+<dt><strong>rng: numpy.random.Generator, optional</strong></dt><dd><p>Random number generator.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -293,9 +295,9 @@ for any value of <span class="math notranslate nohighlight">\(\epsilon &gt; 0\)<
 </dd>
 <dt><a href="#id9"><span class="problematic" id="id10">y_loadings_</span></a>: numpy array of shape (A, )</dt><dd><p>Y loadings.</p>
 </dd>
-<dt>x_residuals: numpy array of shape (n, m)</dt><dd><p>X residuals.</p>
+<dt><a href="#id11"><span class="problematic" id="id12">x_residuals_</span></a>: numpy array of shape (n, m)</dt><dd><p>X residuals.</p>
 </dd>
-<dt>y_residuals: numpy array of shape (n, p)</dt><dd><p>Y residuals.</p>
+<dt><a href="#id13"><span class="problematic" id="id14">y_residuals_</span></a>: numpy array of shape (n, p)</dt><dd><p>Y residuals.</p>
 </dd>
 </dl>
 </dd>
@@ -726,7 +728,7 @@ sub-estimator of a meta-estimator, e.g. used inside a
 
 <dl class="py class">
 <dt class="sig sig-object py" id="diPLSlib.models.EDPLS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">diPLSlib.models.</span></span><span class="sig-name descname"><span class="pre">EDPLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centering</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#EDPLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.EDPLS" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">diPLSlib.models.</span></span><span class="sig-name descname"><span class="pre">EDPLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centering</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#EDPLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.EDPLS" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#diPLSlib.models.DIPLS" title="diPLSlib.models.DIPLS"><code class="xref py py-class docutils literal notranslate"><span class="pre">DIPLS</span></code></a></p>
 <p><span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares Regression.</p>
 <p>This class implements the  <span class="math notranslate nohighlight">\((\epsilon, \delta)\)</span>-Differentially Private Partial Least Squares (PLS) regression method by Nikzad-Langerodi et al. (2024, unpublished).</p>
@@ -1198,8 +1200,7 @@ sub-estimator of a meta-estimator, e.g. used inside a
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></p>
 <p>Kernel Domain Adaptive Partial Least Squares (KDAPLS) algorithm for domain adaptation.</p>
 <p>This class implements KDAPLS by calling the ‘kdapls’ function from ‘functions.py’.
-KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS)
-and aligns domains in that space while fitting the regression model on labeled data.</p>
+KDAPLS projects both source and target data into a reproducing kernel Hilbert space (RKHS) and aligns domains in that space while fitting the regression model on labeled data.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1226,10 +1227,22 @@ to all latent variables.</p>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
+<dd class="field-even"><dl>
+<dt><strong>n_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>x</cite>.</p>
+</dd>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>Number of features (variables) in <cite>x</cite>.</p>
+</dd>
+<dt><strong>ns_</strong><span class="classifier">int</span></dt><dd><p>Number of samples in <cite>xs</cite>.</p>
+</dd>
+<dt><strong>nt_</strong><span class="classifier">int or list</span></dt><dd><p>Number of samples in <cite>xt</cite>. If multiple target domains are provided, this is a list of sample counts for each domain.</p>
+</dd>
 <dt><strong>coef_</strong><span class="classifier">ndarray of shape (n_features, 1)</span></dt><dd><p>Regression coefficient vector used for predictions.</p>
 </dd>
-<dt><strong>X_</strong><span class="classifier">ndarray of shape (n_samples, n_features)</span></dt><dd><p>Training data used for fitting the model.</p>
+<dt><strong>X_</strong><span class="classifier">ndarray of shape (<a href="#id15"><span class="problematic" id="id16">n_</span></a>, <a href="#id17"><span class="problematic" id="id18">n_features_in_</span></a>)</span></dt><dd><p>Training data used for fitting the model.</p>
+</dd>
+<dt><strong>xs_</strong><span class="classifier">ndarray of shape (<a href="#id19"><span class="problematic" id="id20">ns_</span></a>, <a href="#id21"><span class="problematic" id="id22">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) Source domain data used for fitting the model.</p>
+</dd>
+<dt><strong>xt_</strong><span class="classifier">ndarray of shape (<a href="#id23"><span class="problematic" id="id24">nt_</span></a>, <a href="#id25"><span class="problematic" id="id26">n_features_in_</span></a>)</span></dt><dd><p>(Unlabeled) Target domain data used for fitting the model.</p>
 </dd>
 <dt><strong>y_mean_</strong><span class="classifier">float</span></dt><dd><p>Mean of the training response variable.</p>
 </dd>
@@ -1285,7 +1298,7 @@ Neural computation, 10(5):1299-1319, 1998.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">KDAPLS</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">kernel_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;rbf&quot;</span><span class="p">,</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span><span class="mf">0.001</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
-<span class="go">KDAPLS(A=2, l=0.5, kernel_params={&#39;type&#39;: &#39;rbf&#39;, &#39;gamma&#39;: 0.001})</span>
+<span class="go">KDAPLS(kernel_params={&#39;gamma&#39;: 0.001, &#39;type&#39;: &#39;rbf&#39;}, l=0.5)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">yhat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">xtest</span><span class="p">)</span>
 </pre></div>
@@ -1322,6 +1335,20 @@ Neural computation, 10(5):1299-1319, 1998.</p></li>
 <dt class="sig sig-object py" id="diPLSlib.models.KDAPLS.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/diPLSlib/models.html#KDAPLS.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#diPLSlib.models.KDAPLS.predict" title="Link to this definition"></a></dt>
 <dd><p>Predict with KDAPLS model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">ndarray of shape (n_samples, n_features)</span></dt><dd><p>Test data matrix to perform the prediction on.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>yhat</strong><span class="classifier">ndarray of shape (n_samples_test,)</span></dt><dd><p>Predicted response values for the test data.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

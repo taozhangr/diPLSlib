@@ -9,6 +9,7 @@ diPLSlib model classes
 # Modules
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_X_y
+from sklearn.utils import check_random_state
 from sklearn.exceptions import NotFittedError
 from scipy.sparse import issparse, sparray
 import numpy as np
@@ -48,11 +49,29 @@ class KDAPLS(RegressorMixin, BaseEstimator):
 
     Attributes
     ----------
+    n_ : int
+        Number of samples in `x`.
+
+    n_features_in_ : int
+        Number of features (variables) in `x`.
+
+    ns_ : int
+        Number of samples in `xs`.
+
+    nt_ : int or list
+        Number of samples in `xt`. If multiple target domains are provided, this is a list of sample counts for each domain.
+
     coef_ : ndarray of shape (n_features, 1)
         Regression coefficient vector used for predictions.
 
-    X_ : ndarray of shape (n_samples, n_features)
+    X_ : ndarray of shape (n_, n_features_in_)
         Training data used for fitting the model.
+
+    xs_ : ndarray of shape (ns_, n_features_in_)    
+        (Unlabeled) Source domain data used for fitting the model.
+
+    xt_ : ndarray of shape (nt_, n_features_in_)
+        (Unlabeled) Target domain data used for fitting the model.
 
     y_mean_ : float
         Mean of the training response variable.
@@ -73,7 +92,7 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     >>> xt = np.random.rand(50, 10)
     >>> model = KDAPLS(A=2, l=0.5, kernel_params={"type":"rbf","gamma":0.001})
     >>> model.fit(x, y, xs, xt)
-    KDAPLS(A=2, l=0.5, kernel_params={'type': 'rbf', 'gamma': 0.001})
+    KDAPLS(kernel_params={'gamma': 0.001, 'type': 'rbf'}, l=0.5)
     >>> xtest = np.random.rand(5, 10)
     >>> yhat = model.predict(xtest)
 
@@ -88,9 +107,8 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     def __init__(self, A=2, l=0, kernel_params=None, target_domain=0):
         self.A = A
         self.l = l
-        self.kernel_params = kernel_params if kernel_params is not None else {"type": "rbf", "gamma": 0.0001}
+        self.kernel_params = kernel_params
         self.target_domain = target_domain
-        self.is_fitted_ = False
 
     def fit(self, X, y, xs=None, xt=None, **kwargs):
         """
@@ -115,6 +133,16 @@ class KDAPLS(RegressorMixin, BaseEstimator):
             Fitted estimator.
         """
 
+        # Set kernel parameters
+        if self.kernel_params is None:
+            
+            kernel_params = {"type": "primal"}
+
+        else:
+
+            kernel_params = self.kernel_params.copy()
+
+        
         # Check for sparse input
         if issparse(X):
 
@@ -142,20 +170,42 @@ class KDAPLS(RegressorMixin, BaseEstimator):
             xt = check_array(xt, ensure_2d=True, allow_nd=False, accept_large_sparse=False, accept_sparse=False, force_all_finite=True)
         xt = [np.atleast_2d(x) for x in xt] if isinstance(xt, list) else np.atleast_2d(xt) if xt is not None else X
 
-        # Flatten y to 1D array
-        y = np.ravel(y)
+        # Check if at least two samples and features are provided
+        if X.shape[0] < 2:
+            raise ValueError("At least two samples are required to fit the model (got n_samples = {}).".format(X.shape[0]))
+        
+        if X.shape[1] < 2:
+            raise ValueError("KDAPLS requires at least 2 features to fit the model (got n_features = {}).".format(X.shape[1]))
+
+
+        # Ensure y is 2D
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+
 
         # Check for complex data
         if np.iscomplexobj(X) or np.iscomplexobj(y) or np.iscomplexobj(xs) or np.iscomplexobj(xt):
             
             raise ValueError("Complex data not supported")
+
+        # Preliminaries
+        self.n_, self.n_features_in_ = X.shape
+        self.ns_, _ = xs.shape
+        if isinstance(xt, list):
+            self.nt_ = [x.shape[0] for x in xt]
+        else:
+            self.nt_, _ = xt.shape
         
+        self.y_ = y
+        self.xs_ = xs
+        self.xt_ = xt
+
 
         b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = algo.kdapls(
             X, y, xs, xt,
             A=self.A,
             l=self.l,
-            kernel_params=self.kernel_params
+            kernel_params=kernel_params
         )
 
         # Select coefficient vector based on target_domain
@@ -173,35 +223,107 @@ class KDAPLS(RegressorMixin, BaseEstimator):
     def predict(self, X):
         """
         Predict with KDAPLS model.
+
+        Parameters
+        ----------
+
+        X : ndarray of shape (n_samples, n_features)
+            Test data matrix to perform the prediction on.
+
+        Returns
+        -------
+
+        yhat : ndarray of shape (n_samples_test,)
+            Predicted response values for the test data.
+
         """
+        # Check if the model is fitted
         check_is_fitted = getattr(self, "is_fitted_", False)
         if not check_is_fitted:
-            raise ValueError("KDAPLS object is not fitted yet.")
+            raise NotFittedError("KDAPLS object is not fitted yet.")
+        
+        # Check for sparse input
+        if issparse(X):
+            raise ValueError("Sparse input is not supported. Please convert your data to dense format.")
+
+        # Validate input array
+        X = check_array(X, ensure_2d=True, allow_nd=False, force_all_finite=True)
+
+        # Assert feature match
+        if X.shape[1] != self.X_.shape[1]:
+            raise ValueError(
+                f"Number of features in the test data ({X.shape[1]}) does not match "
+                f"the number of features in the training data ({self.X_.shape[1]})."
+            )
 
         Kt_c = self._x_centering(X)
-        return Kt_c @ self.coef_ + self.centering_["y_mean_"]
+        yhat = Kt_c @ self.coef_ + self.centering_["y_mean_"]
+
+        # Ensure the shape of yhat matches the shape of y
+        yhat = np.ravel(yhat)
+
+        return yhat 
 
     def _x_centering(self, X):
         """
         Center new data X using stored centering_.
+
+        Parameters
+        ----------
+
+        X : ndarray of shape (n_samples, n_features)
+            Test data matrix to perform the prediction on.
+
+        Returns
+        -------
+
+        Kt : ndarray 
+            Centered test data matrix. The shape of Kt depends on the kernel type:
+            - For 'rbf' and 'linear', Kt is the kernel matrix between X and X_.
+            - For 'primal', Kt is the centered test data matrix.
+
         """
-        import numpy as np
+    
         n = self.X_.shape[0]
         Kt = None
-        if self.kernel_params["type"] == "rbf":
-            gamma_ = self.kernel_params["gamma"]
-            Kt = rbf_kernel(X, self.X_, gamma=gamma_)
-        elif self.kernel_params["type"] == "linear":
-            Kt = linear_kernel(X, self.X_)
-        elif self.kernel_params["type"] == "primal":
-            Kt = X.copy()
 
-        if self.kernel_params["type"] == "primal":
-            return Kt - self.centering_["K"].mean(axis=0)
-        else:
-            J = (1 / n) * np.ones((n, n))
-            Jt = (1 / self.centering_["n"]) * (np.ones((X.shape[0], 1)) @ np.ones((1, self.centering_["n"])))
-            return Kt - Kt @ J - Jt @ self.centering_["K"] + Jt @ self.centering_["K"] @ J
+        # Check if X has same number of features as X_
+        if X.shape[1] != self.X_.shape[1]:
+            raise ValueError(
+                f"Number of features in the test data ({X.shape[1]}) does not match "
+                f"the number of features in the training data ({self.X_.shape[1]})."
+            )
+
+        if self.kernel_params is not None:
+
+            if self.kernel_params["type"] == "rbf":
+                gamma_ = self.kernel_params["gamma"]
+                Kt = rbf_kernel(X, self.X_, gamma=gamma_)
+
+            elif self.kernel_params["type"] == "linear":
+                Kt = linear_kernel(X, self.X_)
+
+            elif self.kernel_params["type"] == "primal":
+                Kt = X.copy()
+
+            else:
+                raise ValueError("Invalid kernel type. Supported types are 'rbf', 'linear', and 'primal'.")
+
+            if self.kernel_params["type"] == "primal":
+                return Kt - self.centering_["K"].mean(axis=0)
+        
+            else:
+
+                J = (1 / n) * np.ones((n, n))
+                Jt = (1 / self.centering_["n"]) * (np.ones((X.shape[0], 1)) @ np.ones((1, self.centering_["n"])))
+                return Kt - Kt @ J - Jt @ self.centering_["K"] + Jt @ self.centering_["K"] @ J
+        
+        else: # Use primal da-PLS
+
+            Kt = X.copy()
+            mean_vec = self.centering_["K"].mean(axis=0)
+        
+            return Kt - mean_vec
 
 
 class DIPLS(RegressorMixin, BaseEstimator):
@@ -806,7 +928,7 @@ class GCTPLS(DIPLS):
 
 
 class EDPLS(DIPLS):
-    '''
+    r'''
 
     :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.
 
@@ -882,13 +1004,13 @@ class EDPLS(DIPLS):
     >>> yhat = model.predict(xtest)
     '''
 
-    def __init__(self, A:int, epsilon:float, delta:float=0.05, centering:bool=True):
+    def __init__(self, A:int=2, epsilon:float=1.0, delta:float=0.05, centering:bool=True, random_state=None):
         # Model parameters
         self.A = A
         self.epsilon = epsilon
         self.delta = delta
         self.centering = centering
-        self.is_fitted_ = False
+        self.random_state = random_state
 
 
     def fit(self, X:np.ndarray, y:np.ndarray, **kwargs):
@@ -954,7 +1076,8 @@ class EDPLS(DIPLS):
         x = self.x_ 
 
         ### Fit model
-        results = algo.edpls(x, y.reshape(-1,1), self.A, epsilon=self.epsilon, delta=self.delta)
+        rng = check_random_state(self.random_state)
+        results = algo.edpls(x, y.reshape(-1,1), self.A, epsilon=self.epsilon, delta=self.delta, rng=rng)
         self.coef_, self.x_weights_, self.x_loadings_, self.y_loadings_, self.x_scores_, self.x_residuals_, self.y_residuals_  = results
 
         self.is_fitted_ = True 
@@ -999,9 +1122,17 @@ class EDPLS(DIPLS):
         if self.centering is True:
             x = x[...,:] - self.x_mean_
 
-
         # Predict y
         yhat = x@self.coef_ + self.y_mean_
 
+        # Ensure the shape of yhat matches the shape of y
+        yhat = np.ravel(yhat)
+
 
         return yhat
+    
+    def _more_tags(self):
+        '''
+        Return tags for the estimator.
+        '''
+        return {"poor_score": True}

@@ -18,7 +18,7 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
            A:int, 
            l, 
            kernel_params:dict={"type":"rbf","gamma":10}):
-    '''
+    r'''
     Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.
 
     This method fits a Kernel PLS regression model using labeled source domain data and potentially 
@@ -96,6 +96,15 @@ def kdapls(x:np.ndarray, y:np.ndarray, xs:np.ndarray, xt,
     >>> xt = np.random.random((50, 10))
     >>> b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, (0.5)) 
     '''
+
+    # Input validation
+    x = check_array(x, dtype=np.float64)
+    xs = check_array(xs, dtype=np.float64)
+    if isinstance(xt, list):
+        xt = [check_array(xti, dtype=np.float64) for xti in xt]
+    else:
+        xt = check_array(xt, dtype=np.float64)
+    y = check_array(y, dtype=np.float64)
     
     # Get dimensions of arrays and initialize matrices
     (ns, k) = np.shape(xs)
@@ -719,8 +728,8 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return L
 
 
-def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:float=0.05):
-    '''
+def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:float=0.05, rng=None):
+    r'''
     :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.
 
     A Gaussian mechanism according to Balle & Wang (2018) is used to privately release weights :math:`\mathbf{W}`, scores :math:`\mathbf{T}`
@@ -765,6 +774,9 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
     delta: float, default=0.05
         Failure probability.
 
+    rng: numpy.random.Generator, optional
+        Random number generator.
+
 
     Returns
     -------
@@ -806,7 +818,9 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
     >>> y = np.random.rand(100, 1)
     >>> coef_, x_weights_, x_loadings_, y_loadings_, x_scores_, x_residuals_, y_residuals_ = edpls(x, y, 2, epsilon=0.1, delta=0.05)
     '''
-
+    # Input validation
+    x = check_array(x, dtype=np.float64)
+    y = check_array(y, dtype=np.float64)
 
     # Get dimensions of arrays
     (n_, n_features_) = np.shape(x)
@@ -853,7 +867,12 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
         sensitivity = x_max_norm*y_max
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
         
-        v = np.random.normal(0, R, n_features_)
+        if rng is None:
+            v = np.random.normal(0, R, n_features_)
+
+        else:
+            v = rng.normal(0, R, n_features_)
+
         w = wo + v
 
         # Normalize w (after adding noise)
@@ -862,7 +881,13 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
         # Add noise to t
         sensitivity = x_max_norm
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
-        v = np.random.normal(0, R, n_)
+
+        if rng is None:
+            v = np.random.normal(0, R, n_)
+        
+        else:
+            v = rng.normal(0, R, n_)
+
         t = t + v.reshape(n_,1)
 
         # Normalize t (after adding noise)
@@ -878,7 +903,14 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
         #sensitivity = 2*x_max_norm
         sensitivity = x_max_norm
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
-        v = np.random.normal(0, R, n_features_)
+
+        if rng is None:
+            v = np.random.normal(0, R, n_features_)
+        
+        else:
+            v = rng.normal(0, R, n_features_)
+
+        
         p = p + v
 
         # Compute y loadings (noise-less)
@@ -890,7 +922,13 @@ def edpls(x:np.ndarray, y:np.ndarray, n_components:int, epsilon:float, delta:flo
         # Add noise
         sensitivity = y_max
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
-        v = np.random.normal(0, R, 1)
+
+        if rng is None:
+            v = np.random.normal(0, R, 1)
+
+        else:
+            v = rng.normal(0, R, 1)
+
         c = c + v
 
         # Store weights, scores and loadings

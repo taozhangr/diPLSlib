@@ -91,7 +91,7 @@
            <span class="n">A</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> 
            <span class="n">l</span><span class="p">,</span> 
            <span class="n">kernel_params</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;rbf&quot;</span><span class="p">,</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">}):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.</span>
 
 <span class="sd">    This method fits a Kernel PLS regression model using labeled source domain data and potentially </span>
@@ -169,6 +169,15 @@
 <span class="sd">    &gt;&gt;&gt; xt = np.random.random((50, 10))</span>
 <span class="sd">    &gt;&gt;&gt; b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, (0.5)) </span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># Input validation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_array</span><span class="p">(</span><span class="n">xti</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="k">for</span> <span class="n">xti</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     
     <span class="c1"># Get dimensions of arrays and initialize matrices</span>
     <span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
@@ -804,8 +813,8 @@
 
 <div class="viewcode-block" id="edpls">
 <a class="viewcode-back" href="../../diPLSlib.html#diPLSlib.functions.edpls">[docs]</a>
-<span class="k">def</span> <span class="nf">edpls</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">delta</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">edpls</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">delta</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    :math:`(\epsilon, \delta)`-Differentially Private Partial Least Squares Regression.</span>
 
 <span class="sd">    A Gaussian mechanism according to Balle &amp; Wang (2018) is used to privately release weights :math:`\mathbf{W}`, scores :math:`\mathbf{T}`</span>
@@ -850,6 +859,9 @@
 <span class="sd">    delta: float, default=0.05</span>
 <span class="sd">        Failure probability.</span>
 
+<span class="sd">    rng: numpy.random.Generator, optional</span>
+<span class="sd">        Random number generator.</span>
+
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -869,10 +881,10 @@
 <span class="sd">    y_loadings_: numpy array of shape (A, )</span>
 <span class="sd">        Y loadings.</span>
 
-<span class="sd">    x_residuals: numpy array of shape (n, m)</span>
+<span class="sd">    x_residuals_: numpy array of shape (n, m)</span>
 <span class="sd">        X residuals.</span>
 
-<span class="sd">    y_residuals: numpy array of shape (n, p)</span>
+<span class="sd">    y_residuals_: numpy array of shape (n, p)</span>
 <span class="sd">        Y residuals.</span>
 
 <span class="sd">    </span>
@@ -891,7 +903,9 @@
 <span class="sd">    &gt;&gt;&gt; y = np.random.rand(100, 1)</span>
 <span class="sd">    &gt;&gt;&gt; coef_, x_weights_, x_loadings_, y_loadings_, x_scores_, x_residuals_, y_residuals_ = edpls(x, y, 2, epsilon=0.1, delta=0.05)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
+    <span class="c1"># Input validation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="c1"># Get dimensions of arrays</span>
     <span class="p">(</span><span class="n">n_</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -938,7 +952,12 @@
         <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">x_max_norm</span><span class="o">*</span><span class="n">y_max</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">calibrateAnalyticGaussianMechanism</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
         
-        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+
         <span class="n">w</span> <span class="o">=</span> <span class="n">wo</span> <span class="o">+</span> <span class="n">v</span>
 
         <span class="c1"># Normalize w (after adding noise)</span>
@@ -947,7 +966,13 @@
         <span class="c1"># Add noise to t</span>
         <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">x_max_norm</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">calibrateAnalyticGaussianMechanism</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_</span><span class="p">)</span>
+
         <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Normalize t (after adding noise)</span>
@@ -963,7 +988,14 @@
         <span class="c1">#sensitivity = 2*x_max_norm</span>
         <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">x_max_norm</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">calibrateAnalyticGaussianMechanism</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n_features_</span><span class="p">)</span>
+
+        
         <span class="n">p</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="n">v</span>
 
         <span class="c1"># Compute y loadings (noise-less)</span>
@@ -975,7 +1007,13 @@
         <span class="c1"># Add noise</span>
         <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">y_max</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">calibrateAnalyticGaussianMechanism</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
         <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">v</span>
 
         <span class="c1"># Store weights, scores and loadings</span>
