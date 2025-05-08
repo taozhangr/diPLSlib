@@ -2,22 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.4.3] - 2025-03-14
+
+## [2.5.0] - 2024-02-14
+Domain adaptive partial least squares regression
 
 ### Added
+- New model class `DAPLS` for (kernel) domain adaptive partial least squares regression.
+- `demo_daPLS.ipynb` notebook for demonstration of the new model class.
+- Documentation for the new model class included.
+- Usage pattern for the new model class added to the README.
 - Demo of the heuristic regularization parameter selection for the `DIPLS` class.
 
 ### Changed
 - Changed the `demo_ModelSelection.ipynb` notebook to include a demonstration of the heuristic regularization parameter selection for the `DIPLS` class.
 
 ### Fixed
-- N/A
+- Fixed failure of `check_estimator()` in the `EDPLS` class.
 
 ### Removed
-- N/A
+N/A
 
 ### Breaking Changes
-- N/A
+N/A
 
 ## [2.4.2] - 2024-12-13
 

@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath('../'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'diPLSlib'
-copyright = '2024, Ramin Nikzad-Langerodi'
+copyright = '2025, Ramin Nikzad-Langerodi'
 author = 'Ramin Nikzad-Langerodi'
-release = '2.4.2'
+release = '2.5.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
