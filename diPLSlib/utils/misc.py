@@ -235,3 +235,28 @@ def calibrateAnalyticGaussianMechanism(epsilon, delta, GS, tol = 1.e-12):
     sigma = alpha*GS/sqrt(2.0*epsilon)
 
     return sigma
+
+
+def setup_chinese_plot():
+    """
+    配置 matplotlib 以正确显示中文、负号和数学公式上标。
+
+    此函数设置 matplotlib 的全局参数，使其能够：
+    - 正确显示中文字符（使用微软雅黑或黑体字体）
+    - 正确显示负号（避免负号显示为方块）
+    - 正确渲染 LaTeX 数学公式（如上标 R²）
+
+    示例
+    --------
+
+    >>> from diPLSlib.utils.misc import setup_chinese_plot
+    >>> setup_chinese_plot()
+    """
+    import matplotlib.pyplot as plt
+
+    # 中文字体设置（Windows系统优先使用微软雅黑）
+    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']
+    # 负号正确显示
+    plt.rcParams['axes.unicode_minus'] = False
+    # 数学文本使用 stix 渲染器（确保上标正常）
+    plt.rcParams['mathtext.fontset'] = 'stix'
