@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Modules
+# 模块
 import numpy as np
 import scipy.linalg
 import scipy.stats
@@ -19,12 +19,14 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
            l, 
            kernel_params: dict = {"type": "rbf", "gamma": 10}):
     r'''
-    Perform Kernel Domain Adaptive Partial Least Squares (kda-PLS) regression.
+    执行核域自适应偏最小二乘 (Kernel Domain Adaptive Partial Least Squares, kda-PLS) 回归。
 
-    This method fits a Kernel PLS regression model using labeled source domain data and potentially 
-    unlabeled target domain data. In contrast to di-PLS, kda-PLS aligns the source and target distributions in a RKHS in a non-parametric way, thus making no assumptions about the underlying data distributions.
+    该方法利用有标签的源域数据和潜在的无标签目标域数据拟合核偏最小二乘回归模型。
+    与 di-PLS 不同，kda-PLS 以非参数方式对齐再生核希尔伯特空间 (RKHS) 中的源分布和目标分布，
+    因此不对底层数据分布做任何假设。
 
-    Mathematically, for each latent variable (LV), kda‐PLS finds a weight vector :math:`\mathbf{w}` (with :math:`\mathbf{w}^T\mathbf{w} = 1`) that maximizes
+    数学上，对于每个潜变量 (LV)，kda-PLS 寻找一个权重向量 :math:`\mathbf{w}`（满足 :math:`\mathbf{w}^T\mathbf{w} = 1`），
+    使得以下目标函数最大化：
 
     .. math::
         \max_{\mathbf{w} : \mathbf{w}^T\mathbf{w} = 1} \Biggl(
@@ -32,85 +34,85 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
         - \gamma \mathbf{w}^T K(X_{st}, X_s)^T H L H K(X_{st}, X_s) \mathbf{w}
         \Biggr),
 
-    where
+    其中：
 
-    - :math:`K(X_s, X_s)` is the kernel matrix computed from the source-domain data,
-    - :math:`K(X_{st}, X_s)` is the kernel matrix computed between the combined source/target data :math:`X_{st} = [X_s; X_t]` and the source-domain data,
-    - :math:`Y` is the response variable,
-    - :math:`H` denotes the centering matrix,
-    - :math:`L` is the Laplacian matrix defined such that :math:`L_{ij}=1` if the i-th and j-th sample in :math:`X_{st}` belong to the same domain and 0 otherwise,
-    - :math:`\gamma` is the regularization parameter that balances maximizing the covariance between :math:`K(X_s, X_s)` and :math:`Y` with minimizing the domain discrepancy.
+    - :math:`K(X_s, X_s)` 是根据源域数据计算的核矩阵，
+    - :math:`K(X_{st}, X_s)` 是合并的源/目标数据 :math:`X_{st} = [X_s; X_t]` 与源域数据之间计算的核矩阵，
+    - :math:`Y` 是响应变量，
+    - :math:`H` 表示中心化矩阵，
+    - :math:`L` 是拉普拉斯矩阵，定义为：如果 :math:`X_{st}` 中的第 i 个和第 j 个样本属于同一域，则 :math:`L_{ij}=1`，否则为 0，
+    - :math:`\gamma` 是正则化参数，用于平衡最大化 :math:`K(X_s, X_s)` 与 :math:`Y` 之间的协方差以及最小化域差异。
 
-    Parameters
+    参数
     ----------
-    x : ndarray of shape (n_samples, n_features)
-        Labeled source domain data.
+    x : 形状为 (n_samples, n_features) 的 ndarray
+        有标签的源域数据。
 
-    y : ndarray of shape (n_samples, 1)
-        Response variable associated with the source domain.
+    y : 形状为 (n_samples, 1) 的 ndarray
+        与源域相关的响应变量。
 
-    xs : ndarray of shape (n_source_samples, n_features)
-        Source domain feature data.
+    xs : 形状为 (n_source_samples, n_features) 的 ndarray
+        源域特征数据。
 
-    xt : ndarray of shape (n_target_samples, n_features) or list of ndarray
-        Target domain feature data. Multiple domains can be provided as a list.
+    xt : 形状为 (n_target_samples, n_features) 的 ndarray 或 ndarray 列表
+        目标域特征数据。多个域可以作为列表提供。
 
     A : int
-        Number of latent variables to use in the model.
+        模型中使用的潜变量数量。
 
-    l : float or tuple of length A
-        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
+    l : float 或长度为 A 的元组
+        正则化参数。如果提供单个值，则所有潜变量应用相同的正则化。
 
-    kernel_params : dict, default={"type": "rbf", "gamma": 10}
-        Kernel parameters. The dictionary must contain the following keys:
-        - "type": str, default="rbf"
-            Type of kernel to use. Supported types are "rbf", "linear", and "primal".
-        - "gamma": float, default=10
-            Kernel coefficient for the RBF kernel.
+    kernel_params : dict, 默认={"type": "rbf", "gamma": 10}
+        核参数。字典必须包含以下键：
+        - "type": str, 默认="rbf"
+            使用的核类型。支持的类型有 "rbf"、"linear" 和 "primal"。
+        - "gamma": float, 默认=10
+            RBF 核的核系数。
 
-    Returns
+    返回
     -------
-    b : ndarray of shape (n_features, 1)
-        Regression coefficient vector.
+    b : 形状为 (n_features, 1) 的 ndarray
+        回归系数向量。
 
-    bst : ndarray of shape (n_features, 1)
-        Regression coefficient vector for the target domain.
+    bst : 形状为 (n_features, 1) 的 ndarray
+        目标域的回归系数向量。
 
-    T : ndarray of shape (n_samples, A)
-        Training data projections (scores).
+    T : 形状为 (n_samples, A) 的 ndarray
+        训练数据投影（得分）。
 
-    Tst : ndarray of shape (n_source_samples + n_target_samples, A)
-        Source and target domain projections (scores).
+    Tst : 形状为 (n_source_samples + n_target_samples, A) 的 ndarray
+        源域和目标域投影（得分）。
 
-    W : ndarray of shape (m, A)
-        Weight matrix.
+    W : 形状为 (m, A) 的 ndarray
+        权重矩阵。
 
-    P : ndarray of shape (m, A)
-        Loadings matrix for source domain.
+    P : 形状为 (m, A) 的 ndarray
+        源域的载荷矩阵。
 
-    Pst : ndarray of shape (m, A)
-        Loadings matrix for source and target domains.
+    Pst : 形状为 (m, A) 的 ndarray
+        源域和目标域的载荷矩阵。
 
     E : ndarray
-        Residuals for source domain.
+        源域的残差。
 
     Est : ndarray
-        Residuals for source and target domains.
+        源域和目标域的残差。
 
     Ey : ndarray
-        Residuals of response variable.
+        响应变量的残差。
 
-    C : ndarray of shape (A, q)
-        Regression vector relating projections to the response variable.
+    C : 形状为 (A, q) 的 ndarray
+        将投影与响应变量关联起来的回归向量。
 
     centering : dict
-        Dictionary containing centering information.
+        包含中心化信息的字典。
 
-    References
+    参考文献
     ----------
     1. Huang, G., Chen, X., Li, L., Chen, X., Yuan, L., & Shi, W. (2020). Domain adaptive partial least squares regression. Chemometrics and Intelligent Laboratory Systems, 201, 103986.
 
-    Examples
+    示例
     --------
     >>> import numpy as np
     >>> from diPLSlib.functions import kdapls
@@ -120,7 +122,7 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
     >>> xt = np.random.random((50, 10))
     >>> b, bst, T, Tst, W, P, Pst, E, Est, Ey, C, centering = kdapls(x, y, xs, xt, 2, 0.5)
     '''
-    # Input validation
+    # 输入验证
     x = check_array(x, dtype=np.float64)
     xs = check_array(xs, dtype=np.float64)
     if isinstance(xt, list):
@@ -129,7 +131,7 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
         xt = check_array(xt, dtype=np.float64)
     y = check_array(y, dtype=np.float64)
     
-    # Get dimensions of arrays and initialize matrices
+    # 获取数组维度并初始化矩阵
     (ns, k) = np.shape(xs)
     (n, k) = np.shape(x)
     #(nt, k) = np.shape(xt)
@@ -162,7 +164,7 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
     Pst = np.zeros([m, A])
     C = np.zeros([A, q])    
     
-    # Laplace matrix       
+    # 拉普拉斯矩阵       
     J = (1/n)*np.ones((n,n))
     H = np.eye(n) - J
     Jst = (1/(ns+nt))*np.ones((ns+nt,ns+nt))
@@ -180,7 +182,7 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
     else:
         L[ns:, ns:] = 1
 
-    # Compute kernel matrices
+    # 计算核矩阵
     if kernel_params["type"] == "rbf":
     
         gamma = kernel_params["gamma"]
@@ -197,23 +199,23 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
         K = x.copy()
         Kst = xst.copy()
 
-    # Store Centering elements
+    # 存储中心化元素
     centering = {}
     y_mean_ = Y.mean(axis=0)
-    # Source domain
+    # 源域
     centering[0] = {}
     centering[0]["n"] = n
     centering[0]["K"] = K
     centering[0]["y_mean_"] = y_mean_
     
-    # Source-target domain
+    # 源-目标域
     centering[1] = {}
     centering[1]["n"] = ns+nt    
     centering[1]["K"] = Kst   
     centering[1]["y_mean_"] = y_mean_
 
     
-    # Centering
+    # 中心化
     if kernel_params["type"] == "primal":
         K = H@K
         Kst = Hst@Kst
@@ -223,43 +225,43 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
 
     Y = H@Y   
         
-    # Compute LVs    
+    # 计算潜变量 (LVs)
     for i in range(A):
         
         
-        if isinstance(l, tuple) and len(l) == A:       # Separate regularization params for each LV
+        if isinstance(l, tuple) and len(l) == A:       # 为每个潜变量设置独立的正则化参数
 
             lA = l[i]
 
-        elif isinstance(l, (float, int, np.int64)):    # The same regularization param for each LV
+        elif isinstance(l, (float, int, np.int64)):    # 所有潜变量使用相同的正则化参数
 
             lA = l
 
         else:
 
-            raise ValueError("The regularization parameter must be either a single value or an A-tuple.")
+            raise ValueError("正则化参数必须是单个值或 A 元组。")
         
         
-        # Compute domain-invariant weight vector
+        # 计算域不变权重向量
         wM = (K.T@Y@Y.T@K) - lA*(Kst.T@L@Kst)
         wd , wm = eigh(wM)         
         w = wm[:,-1]              
         w.shape = (w.shape[0],1)
         
-        # Compute scores and normalize
+        # 计算得分并归一化
         t = K@w           
         tst = Kst@w
         t = t / np.linalg.norm(t)
         tst = tst / np.linalg.norm(tst)
         
-        # Compute loadings        
+        # 计算载荷        
         p = K.T@t
         pst = Kst.T@tst
         
-        # Regress y on t
+        # 对 t 进行 y 的回归
         c = t.T@Y
 
-        # Store w,t,p,c
+        # 存储 w, t, p, c
         W[:, i] = w.reshape(m)        
         T[:, i] = t.reshape(n)        
         Tst[:, i] = tst.reshape(ns+nt)
@@ -267,18 +269,18 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
         Pst[:, i] = pst.reshape(m)
         C[i] = c.reshape(q)        
 
-        # Deflation
+        # 矩阵紧缩 (Deflation)
         K = K - t@p.T
         Kst = Kst - tst@pst.T 
         
         Y = Y - (t@c)
 
 
-    # Calculate regression vector
+    # 计算回归向量
     b = W@(np.linalg.inv(P.T@W))@C
     bst = W@(np.linalg.inv(Pst.T@W))@C
 
-    # Residuals    
+    # 残差    
     E = K    
     Est = Kst
     Ey = Y
@@ -289,97 +291,95 @@ def kdapls(x: np.ndarray, y: np.ndarray, xs: np.ndarray, xt,
 
 def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplacian: bool = False):
     """
-    Perform (Multiple) Domain-Invariant Partial Least Squares (di-PLS) regression.
+    执行（多）域不变偏最小二乘 (Domain-Invariant Partial Least Squares, di-PLS) 回归。
 
-    This method fits a PLS regression model using labeled source domain data and potentially 
-    unlabeled target domain data across multiple domains, aiming to build a model that 
-    generalizes well across different domains.
+    该方法利用有标签的源域数据和潜在的跨多个域的无标签目标域数据拟合 PLS 回归模型，
+    旨在构建一个在不同域之间具有良好泛化能力的模型。
 
-    Parameters
+    参数
     ----------
-    x : ndarray of shape (n_samples, n_features)
-        Labeled source domain data.
+    x : 形状为 (n_samples, n_features) 的 ndarray
+        有标签的源域数据。
 
-    y : ndarray of shape (n_samples, 1)
-        Response variable associated with the source domain.
+    y : 形状为 (n_samples, 1) 的 ndarray
+        与源域相关的响应变量。
 
-    xs : ndarray of shape (n_source_samples, n_features)
-        Source domain feature data.
+    xs : 形状为 (n_source_samples, n_features) 的 ndarray
+        源域特征数据。
 
-    xt : ndarray of shape (n_target_samples, n_features) or list of ndarray
-        Target domain feature data. Multiple domains can be provided as a list.
+    xt : 形状为 (n_target_samples, n_features) 的 ndarray 或 ndarray 列表
+        目标域特征数据。多个域可以作为列表提供。
 
     A : int
-        Number of latent variables to use in the model.
+        模型中使用的潜变量数量。
 
-    l : float or tuple of length A
-        Regularization parameter. If a single value is provided, the same regularization is applied to all latent variables.
+    l : float 或长度为 A 的元组
+        正则化参数。如果提供单个值，则所有潜变量应用相同的正则化。
 
-    heuristic : bool, default=False
-        If True, automatically determine the regularization parameter to equally balance fitting Y and minimizing domain discrepancy.
+    heuristic : bool, 默认=False
+        如果为 True，则自动确定正则化参数，以平衡拟合 Y 和最小化域差异。
 
-    target_domain : int, default=0
-        Specifies which target domain the model should apply to, where 0 indicates the source domain.
+    target_domain : int, 默认=0
+        指定模型应应用于哪个目标域，其中 0 表示源域。
 
-    laplacian : bool, default=False
-        If True, uses a Laplacian matrix to regularize distances between matched calibration transfer 
-        samples in latent variable space.
+    laplacian : bool, 默认=False
+        如果为 True，则使用拉普拉斯矩阵来正则化潜变量空间中匹配的校正转移样本之间的距离。
 
-    Returns
+    返回
     -------
-    b : ndarray of shape (n_features, 1)
-        Regression coefficient vector.
+    b : 形状为 (n_features, 1) 的 ndarray
+        回归系数向量。
 
-    T : ndarray of shape (n_samples, A)
-        Training data projections (scores).
+    T : 形状为 (n_samples, A) 的 ndarray
+        训练数据投影（得分）。
 
-    Ts : ndarray of shape (n_source_samples, A)
-        Source domain projections (scores).
+    Ts : 形状为 (n_source_samples, A) 的 ndarray
+        源域投影（得分）。
 
-    Tt : ndarray of shape (n_target_samples, A) or list of ndarray
-        Target domain projections (scores).
+    Tt : 形状为 (n_target_samples, A) 的 ndarray 或 ndarray 列表
+        目标域投影（得分）。
 
-    W : ndarray of shape (n_features, A)
-        Weight matrix.
+    W : 形状为 (n_features, A) 的 ndarray
+        权重矩阵。
 
-    P : ndarray of shape (n_features, A)
-        Loadings matrix corresponding to x.
+    P : 形状为 (n_features, A) 的 ndarray
+        与 x 对应的载荷矩阵。
 
-    Ps : ndarray of shape (n_features, A)
-        Loadings matrix corresponding to xs.
+    Ps : 形状为 (n_features, A) 的 ndarray
+        与 xs 对应的载荷矩阵。
 
-    Pt : ndarray of shape (n_features, A) or list of ndarray
-        Loadings matrix corresponding to xt.
+    Pt : 形状为 (n_features, A) 的 ndarray 或 ndarray 列表
+        与 xt 对应的载荷矩阵。
 
     E : ndarray
-        Residuals of training data.
+        训练数据的残差。
 
     Es : ndarray
-        Source domain residual matrix.
+        源域残差矩阵。
 
-    Et : ndarray or list of ndarray
-        Target domain residual matrix.
+    Et : ndarray 或 ndarray 列表
+        目标域残差矩阵。
 
     Ey : ndarray
-        Residuals of response variable in the source domain.
+        源域中响应变量的残差。
 
-    C : ndarray of shape (A, 1)
-        Regression vector relating source projections to the response variable.
+    C : 形状为 (A, 1) 的 ndarray
+        将源域投影与响应变量关联起来的回归向量。
 
-    opt_l : ndarray of shape (A,)
-        Heuristically determined regularization parameter for each latent variable.
+    opt_l : 形状为 (A,) 的 ndarray
+        为每个潜变量启发式确定的正则化参数。
 
-    discrepancy : ndarray of shape (A,)
-        The variance discrepancy between source and target domain projections.
+    discrepancy : 形状为 (A,) 的 ndarray
+        源域和目标域投影之间的方差差异。
 
-    References
+    参考文献
     ----------
     1. Ramin Nikzad-Langerodi et al., "Domain-Invariant Partial Least Squares Regression", Analytical Chemistry, 2018.
     2. Ramin Nikzad-Langerodi et al., "Domain-Invariant Regression under Beer-Lambert's Law", Proc. ICMLA, 2019.
     3. Ramin Nikzad-Langerodi et al., "Domain adaptation for regression under Beer–Lambert’s law", Knowledge-Based Systems, 2020.
     4. B. Mikulasek et al., "Partial least squares regression with multiple domains", Journal of Chemometrics, 2023.
 
-    Examples
+    示例
     --------
     >>> import numpy as np
     >>> from diPLSlib.functions import dipals
@@ -389,12 +389,12 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
     >>> xt = np.random.random((50, 10))
     >>> b, T, Ts, Tt, W, P, Ps, Pt, E, Es, Et, Ey, C, opt_l, discrepancy = dipals(x, y, xs, xt, 2, 0.1)
     """
-    # Get array dimensions
+    # 获取数组维度
     (n, k) = np.shape(x)
     (ns, k) = np.shape(xs)
 
     
-    # Initialize matrices
+    # 初始化矩阵
     Xt = xt
 
     if(type(xt) is list):
@@ -428,38 +428,38 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
     discrepancy = np.zeros(A)
     I = np.eye(k)
 
-    # Compute LVs
+    # 计算潜变量
     for i in range(A):
 
-        if isinstance(l, tuple) and len(l) == A:       # Separate regularization params for each LV
+        if isinstance(l, tuple) and len(l) == A:       # 为每个潜变量设置独立的正则化参数
 
             lA = l[i]
 
-        elif isinstance(l, (float, int, np.int64)):              # The same regularization param for each LV
+        elif isinstance(l, (float, int, np.int64)):              # 所有潜变量使用相同的正则化参数
 
             lA = l
 
         else:
 
-            raise ValueError("The regularization parameter must be either a single value or an A-tuple.")
+            raise ValueError("正则化参数必须是单个值或 A 元组。")
 
 
-        # Compute Domain-Invariant Weight Vector
-        w_pls = ((y.T@x)/(y.T@y))  # Ordinary PLS solution
+        # 计算域不变权重向量
+        w_pls = ((y.T@x)/(y.T@y))  # 普通 PLS 解
        
 
 
-        if(lA != 0 or heuristic is True):  # In case of regularization
+        if(lA != 0 or heuristic is True):  # 如果使用了正则化
 
                 if(type(xt) is not list):
 
-                    # Convex relaxation of covariance difference matrix
+                    # 协方差差异矩阵的凸松弛
                     D = convex_relaxation(xs, xt)
 
-                # Multiple target domains
+                # 多个目标域
                 elif(type(xt) is list):
                     
-                    #print('Relaxing domains ... ')
+                    #print('正在松弛域 ... ')
                     ndoms = len(xt)
                     D = np.zeros([k, k])
 
@@ -477,10 +477,9 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
                 else:
 
-                    print('xt must either be a matrix or list of (appropriately dimensioned) matrices')
+                    print('xt 必须是矩阵或（适当维度的）矩阵列表')
 
-                if(heuristic is True): # Regularization parameter heuristic
-
+                if(heuristic is True): # 正则化参数启发式确定
                     w_pls = w_pls/np.linalg.norm(w_pls)
                     gamma = (np.linalg.norm((x-y@w_pls))**2)/(w_pls@D@w_pls.T)
                     opt_l[i] = gamma
@@ -488,12 +487,12 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
 
                 reg = I+lA/((y.T@y))*D
-                w = scipy.linalg.solve(reg.T, w_pls.T, assume_a='sym').T  # 10 times faster than previous comptation of reg
+                w = scipy.linalg.solve(reg.T, w_pls.T, assume_a='sym').T  # 比之前的 reg 计算快 10 倍
 
-                # Normalize w
+                # 归一化 w
                 w = w/np.linalg.norm(w)
 
-                # Absolute difference between variance of source and target domain projections
+                # 源域和目标域投影方差之间的绝对差异
                 discrepancy[i] = (w @ D @ w.T).item()
 
 
@@ -512,7 +511,7 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
             discrepancy[i] = (w @ D @ w.T).item()
 
     
-        # Compute scores
+        # 计算得分
         t = x@w.T
         ts = xs@w.T
         
@@ -530,10 +529,10 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
             tt = xt@w.T
 
 
-        # Regress y on t
+        # 对 t 进行 y 的回归
         c = (y.T@t)/(t.T@t)
 
-        # Compute loadings
+        # 计算载荷
         p = (t.T@x)/(t.T@t)
         ps = (ts.T@xs)/(ts.T@ts)
         if(type(xt) is list):
@@ -550,10 +549,10 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
             pt = (tt.T@xt)/(tt.T@tt)
 
 
-        # Deflate X and y (Gram-Schmidt orthogonalization)
+        # 紧缩 X 和 y (施密特正交化)
         x = x - t@p
 
-        if laplacian is False:                       # Calibration transfer case
+        if laplacian is False:                       # 仪器校正 (Calibration transfer) 情况
             xs = xs - ts@ps
         
         if(type(xt) is list):
@@ -564,15 +563,15 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
         else:
 
-            if(np.sum(xt) != 0):  # Deflate target matrix only if not zero
+            if(np.sum(xt) != 0):  # 仅当目标矩阵不为零时进行紧缩
 
-                if laplacian is False:                       # Calibration transfer case
+                if laplacian is False:                       # 仪器校正 (Calibration transfer) 情况
                     xt = xt - tt@pt
 
 
         y = y - t*c
 
-        # Store w,t,p,c
+        # 存储 w, t, p, c
         W[:, i] = w
         T[:, i] = t.reshape(n)
         Ts[:, i] = ts.reshape(ns)
@@ -593,24 +592,24 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
             Tt[:, i] = tt.reshape(nt)         
 
 
-    # Calculate regression vector
-    if laplacian is True:                       # Calibration transfer case
+    # 计算回归向量
+    if laplacian is True:                       # 仪器校正 (Calibration transfer) 情况
 
         b = W@(np.linalg.inv(P.T@W))@C
 
     else:
 
-        if isinstance(l, tuple):                # Check if multiple regularization # parameters are passed (one for each LV)
+        if isinstance(l, tuple):                # 检查是否传递了多个正则化参数（每个 LV 一个）
 
-            if target_domain==0:                # Multiple target domains (Domain unknown)
+            if target_domain==0:                # 多个目标域（域未知）
 
                 b = W@(np.linalg.inv(P.T@W))@C
 
-            elif type(xt) is np.ndarray:        # Single target domain
+            elif type(xt) is np.ndarray:        # 单个目标域
 
                 b = W@(np.linalg.inv(Pt.T@W))@C
 
-            elif type(xt) is list:              # Multiple target domains (Domain known)
+            elif type(xt) is list:              # 多个目标域（域已知）
 
                 b = W@(np.linalg.inv(Pt[target_domain-1].T@W))@C
 
@@ -619,7 +618,7 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
                 b = W@(np.linalg.inv(P.T@W))@C   
 
 
-    # Store residuals
+    # 存储残差
     E = x
     Es = xs
     Et = xt
@@ -630,30 +629,29 @@ def dipals(x, y, xs, xt, A, l, heuristic: bool = False, target_domain=0, laplaci
 
 def convex_relaxation(xs, xt):
     """
-    Perform convex relaxation of the covariance difference matrix.
+    执行协方差差异矩阵的凸松弛。
 
-    This relaxation involves computing the eigenvalue decomposition of the symmetric covariance 
-    difference matrix, inverting the signs of negative eigenvalues, and reconstructing the matrix.
-    This corresponds to an upper bound on the covariance difference between source and target domains.
+    该松弛涉及计算对称协方差差异矩阵的特征值分解，反转负特征值的符号，并重建矩阵。
+    这对应于源域和目标域之间协方差差异的上界。
 
-    Parameters
+    参数
     ----------
-    xs : ndarray of shape (n_source_samples, n_features)
-        Feature data from the source domain.
+    xs : 形状为 (n_source_samples, n_features) 的 ndarray
+        来自源域的特征数据。
 
-    xt : ndarray of shape (n_target_samples, n_features)
-        Feature data from the target domain.
+    xt : 形状为 (n_target_samples, n_features) 的 ndarray
+        来自目标域的特征数据。
 
-    Returns
+    返回
     -------
-    D : ndarray of shape (n_features, n_features)
-        Relaxed covariance difference matrix.
+    D : 形状为 (n_features, n_features) 的 ndarray
+        松弛后的协方差差异矩阵。
 
-    References
+    参考文献
     ----------
     Ramin Nikzad-Langerodi et al., "Domain-Invariant Regression under Beer-Lambert's Law", Proc. ICMLA, 2019.
 
-    Examples
+    示例
     --------
     >>> import numpy as np
     >>> from diPLSlib.functions import convex_relaxation
@@ -661,28 +659,28 @@ def convex_relaxation(xs, xt):
     >>> xt = np.random.random((100, 10))
     >>> D = convex_relaxation(xs, xt)
     """
-    # Ensure input arrays are numerical
+    # 确保输入数组是数值型的
     xs = np.asarray(xs, dtype=np.float64)
     xt = np.asarray(xt, dtype=np.float64)
     
-    # Check for NaN or infinite values
+    # 检查 NaN 或无穷大值
     if not np.all(np.isfinite(xs)) or not np.all(np.isfinite(xt)):
-        raise ValueError("Input arrays must not contain NaN or infinite values. one sample.")
+        raise ValueError("输入数组不得包含 NaN 或无穷大值。")
 
-    # Check for complex data
+    # 检查复数数据
     if np.iscomplexobj(xs) or np.iscomplexobj(xt):
-        raise ValueError("Complex data not supported.")
+        raise ValueError("不支持复数数据。")
     
-    # Preliminaries
+    # 准备工作
     ns = np.shape(xs)[0]
     nt = np.shape(xt)[0]
     x = np.vstack([xs, xt])
     x = x[..., :] - np.mean(x, 0)
     
-    # Compute difference between source and target covariance matrices   
+    # 计算源域和目标域协方差矩阵之间的差异   
     rot = (1/ns*xs.T@xs- 1/nt*xt.T@xt) 
 
-    # Convex Relaxation
+    # 凸松弛
     w,v = eigh(rot)
     eigs = np.abs(w)
     eigs = np.diag(eigs)
@@ -693,27 +691,27 @@ def convex_relaxation(xs, xt):
 
 def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
-    Construct a Laplacian matrix for calibration transfer problems.
+    为仪器校正 (Calibration transfer) 问题构建拉普拉斯矩阵。
 
-    Parameters
+    参数
     ----------
-    x : ndarray of shape (n_samples, n_features)
-        Data samples from device 1.
+    x : 形状为 (n_samples, n_features) 的 ndarray
+        来自设备 1 的数据样本。
 
-    y : ndarray of shape (n_samples, n_features)
-        Data samples from device 2.
+    y : 形状为 (n_samples, n_features) 的 ndarray
+        来自设备 2 的数据样本。
 
-    Returns
+    返回
     -------
-    L : ndarray of shape (2 * n_samples, 2 * n_samples)
-        The Laplacian matrix for the calibration transfer problem.
+    L : 形状为 (2 * n_samples, 2 * n_samples) 的 ndarray
+        仪器校正问题的拉普拉斯矩阵。
 
-    References
+    参考文献
     ----------
     Nikzad‐Langerodi, R., & Sobieczky, F. (2021). Graph‐based calibration transfer. 
     Journal of Chemometrics, 35(4), e3319.
 
-    Examples
+    示例
     --------
     >>> import numpy as np
     >>> from diPLSlib.functions import transfer_laplacian
@@ -735,16 +733,17 @@ def transfer_laplacian(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta: float = 0.05, rng=None):
     r'''
-    (\epsilon, \delta)-Differentially Private Partial Least Squares Regression.
+    (\epsilon, \delta)-差分隐私偏最小二乘回归。
 
-    A Gaussian mechanism according to Balle & Wang (2018) is used to privately release weights :math:`\mathbf{W}`, scores :math:`\mathbf{T}`,
-    and :math:`X/Y`-loadings :math:`\mathbf{P}`/:math:`\mathbf{c}` from the PLS1 algorithm. For each latent variable, i.i.d. noise from 
-    :math:`\mathcal{N}(0,\sigma^2)` with variance satisfying
+    根据 Balle & Wang (2018) 的高斯机制，用于从 PLS1 算法中私密发布权重 :math:`\mathbf{W}`、得分 :math:`\mathbf{T}` 
+    以及 :math:`X/Y` 载荷 :math:`\mathbf{P}`/:math:`\mathbf{c}`。对于每个潜变量，添加来自 :math:`\mathcal{N}(0,\sigma^2)` 
+    的独立同分布噪声，其方差满足：
 
     .. math::
         \Phi\left( \frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right) - e^{\epsilon} \Phi\left( -\frac{\Delta}{2\sigma} - \frac{\epsilon\sigma}{\Delta} \right)\leq \delta,
 
-    with :math:`\Phi(t) = \mathrm{P}[\mathcal{N}(0,1)\leq t]` (i.e., the CDF of the standard univariate Gaussian distribution), is added to the weights, scores, and loadings, whereas the sensitivity :math:`\Delta(\cdot)` for the functions releasing the corresponding quantities is calculated as follows:
+    其中 :math:`\Phi(t) = \mathrm{P}[\mathcal{N}(0,1)\leq t]`（即标准单变量高斯分布的 CDF），噪声被添加到权重、得分和载荷中，
+    而发布相应量的函数的敏感度 :math:`\Delta(\cdot)` 计算如下：
 
     .. math::
         \Delta(w) = \sup_{(\mathbf{x}, y)} |y| \|\mathbf{x}\|_2
@@ -758,58 +757,58 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
     .. math::
         \Delta(c) \leq \sup_{y}  |y|.
 
-    Note that in contrast to the Gaussian mechanism proposed in Dwork et al. (2006) and Dwork et al. (2014), the mechanism of Balle & Wang (2018) guarantees :math:`(\epsilon, \delta)`-differential privacy 
-    for any value of :math:`\epsilon > 0` and not only for :math:`\epsilon \leq 1`.
+    请注意，与 Dwork 等人 (2006) 和 Dwork 等人 (2014) 提出的高斯机制相比，Balle & Wang (2018) 的机制保证了对于任何 
+    :math:`\epsilon > 0` 的值（而不仅仅是 :math:`\epsilon \leq 1`）都具有 :math:`(\epsilon, \delta)`-差分隐私。
 
-    Parameters
+    参数
     ----------
-    x : ndarray of shape (n_samples, n_features)
-        Input data.
+    x : 形状为 (n_samples, n_features) 的 ndarray
+        输入数据。
 
-    y : ndarray of shape (n_samples, n_targets)
-        Target values.
+    y : 形状为 (n_samples, n_targets) 的 ndarray
+        目标值。
 
     n_components : int
-        Number of latent variables.
+        潜变量的数量。
 
     epsilon : float
-        Privacy loss parameter.
+        隐私损失参数。
 
-    delta : float, default=0.05
-        Failure probability.
+    delta : float, 默认=0.05
+        失败概率。
 
-    rng : numpy.random.Generator, optional
-        Random number generator.
+    rng : numpy.random.Generator, 可选
+        随机数生成器。
 
-    Returns
+    返回
     -------
-    coef_ : ndarray of shape (n_features, n_targets)
-        Regression coefficients.
+    coef_ : 形状为 (n_features, n_targets) 的 ndarray
+        回归系数。
 
-    x_weights_ : ndarray of shape (n_features, n_components)
-        X weights.
+    x_weights_ : 形状为 (n_features, n_components) 的 ndarray
+        X 权重。
 
-    x_loadings_ : ndarray of shape (n_features, n_components)
-        X loadings.
+    x_loadings_ : 形状为 (n_features, n_components) 的 ndarray
+        X 载荷。
 
-    y_loadings_ : ndarray of shape (n_components, n_targets)
-        Y loadings.
+    y_loadings_ : 形状为 (n_components, n_targets) 的 ndarray
+        Y 载荷。
 
-    x_scores_ : ndarray of shape (n_samples, n_components)
-        X scores.
+    x_scores_ : 形状为 (n_samples, n_components) 的 ndarray
+        X 得分。
 
-    x_residuals_ : ndarray of shape (n_samples, n_features)
-        X residuals.
+    x_residuals_ : 形状为 (n_samples, n_features) 的 ndarray
+        X 残差。
 
-    y_residuals_ : ndarray of shape (n_samples, n_targets)
-        Y residuals.
+    y_residuals_ : 形状为 (n_samples, n_targets) 的 ndarray
+        Y 残差。
 
-    References
+    参考文献
     ----------
     - R. Nikzad-Langerodi, et al. (2024). (epsilon,delta)-Differentially private partial least squares regression (unpublished).
     - Balle, B., & Wang, Y. X. (2018, July). Improving the Gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
 
-    Examples
+    示例
     --------
     >>> from diPLSlib.functions import edpls
     >>> import numpy as np
@@ -817,44 +816,44 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
     >>> y = np.random.rand(100, 1)
     >>> coef_, x_weights_, x_loadings_, y_loadings_, x_scores_, x_residuals_, y_residuals_ = edpls(x, y, 2, epsilon=0.1, delta=0.05)
     '''
-    # Input validation
+    # 输入验证
     x = check_array(x, dtype=np.float64)
     y = check_array(y, dtype=np.float64)
 
-    # Get dimensions of arrays
+    # 获取数组维度
     (n_, n_features_) = np.shape(x)
     I = np.eye(n_features_)
 
-    # Weights
+    # 权重
     x_weights_ = np.zeros([n_features_, n_components])
 
-    # X Scores
+    # X 得分
     x_scores_ = np.zeros([n_, n_components])
 
-    # X Loadings
+    # X 载荷
     x_loadings_ = np.zeros([n_features_, n_components])
 
-    # Y Loadings
+    # Y 载荷
     y_loadings_ = np.zeros([n_components, 1])
 
-    # Iterate over the number of components
+    # 迭代组件数量
     for i in range(n_components):
 
-        # Compute weights w
+        # 计算权重 w
         w_pls = ((y.T@x)/(y.T@y))  
 
-        # Normalize w (noise-less)
+        # 归一化 w（无噪声）
         wo = w_pls / np.linalg.norm(w_pls)
 
-        # Compute x scores and normalize (noise-less)
+        # 计算 x 得分并归一化（无噪声）
         to = x @ wo.T
         to = to / np.linalg.norm(to)
 
-        # Compute x scores and normalize (before adding noise)
+        # 计算 x 得分并归一化（添加噪声前）
         t = x @ wo.T
         t = to / np.linalg.norm(to)
 
-        # Add noise to w
+        # 向 w 添加噪声
         x_min = x.min(axis=0)
         x_max = x.max(axis=0)
         y_min = y.min(axis=0)
@@ -874,10 +873,10 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
 
         w = wo + v
 
-        # Normalize w (after adding noise)
+        # 归一化 w（添加噪声后）
         w = w / np.linalg.norm(w)
 
-        # Add noise to t
+        # 向 t 添加噪声
         sensitivity = x_max_norm
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
 
@@ -889,16 +888,16 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
 
         t = t + v.reshape(n_,1)
 
-        # Normalize t (after adding noise)
+        # 归一化 t（添加噪声后）
         t = t / np.linalg.norm(t)
 
-        # Compute x loadings (noise-less)
+        # 计算 x 载荷（无噪声）
         po = (to.T@x)/(to.T@to)
 
-        # Compute x loadings (before adding noise)
+        # 计算 x 载荷（添加噪声前）
         p = (to.T@x)/(to.T@to)
 
-        # Add noise
+        # 添加噪声
         #sensitivity = 2*x_max_norm
         sensitivity = x_max_norm
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
@@ -912,13 +911,13 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
         
         p = p + v
 
-        # Compute y loadings (noise-less)
+        # 计算 y 载荷（无噪声）
         co = (y.T@to)/(to.T@to)
 
-        # Compute y loadings (before adding noise)
+        # 计算 y 载荷（添加噪声前）
         c = (y.T@to)/(to.T@to)
 
-        # Add noise
+        # 添加噪声
         sensitivity = y_max
         R = calibrateAnalyticGaussianMechanism(epsilon, delta, sensitivity)**2
 
@@ -930,23 +929,21 @@ def edpls(x: np.ndarray, y: np.ndarray, n_components: int, epsilon: float, delta
 
         c = c + v
 
-        # Store weights, scores and loadings
+        # 存储权重、得分和载荷
         x_weights_[:, i] = w
         x_scores_[:, i] = t.reshape(n_)
         x_loadings_[:, i] = p.reshape(n_features_)
         y_loadings_[i] = c
 
-        # Deflate x and y
+        # 紧缩 x 和 y
         x = x - to @ po
         y = y - to * co
 
-    # Compute regression coefficients
+    # 计算回归系数
     coef_ = x_weights_@(np.linalg.inv(x_loadings_.T@x_weights_))@y_loadings_
 
-    # Compute residuals
+    # 计算残差
     x_residuals_ = x
     y_residuals_ = y
 
     return (coef_, x_weights_, x_loadings_, y_loadings_, x_scores_, x_residuals_, y_residuals_ )
-
-

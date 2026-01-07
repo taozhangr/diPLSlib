@@ -1,8 +1,7 @@
-diPLSlib package
+diPLSlib 包
 ================
 
-
-diPLSlib.functions module
+diPLSlib.functions 模块
 -------------------------
 
 .. automodule:: diPLSlib.functions
@@ -10,7 +9,7 @@ diPLSlib.functions module
    :undoc-members:
    :show-inheritance:
 
-diPLSlib.models module
+diPLSlib.models 模块
 ----------------------
 
 .. automodule:: diPLSlib.models
@@ -18,7 +17,7 @@ diPLSlib.models module
    :undoc-members:
    :show-inheritance:
 
-diPLSlib.utils subpackage
+diPLSlib.utils 子包
 -------------------------
 
 .. toctree::
@@ -26,7 +25,7 @@ diPLSlib.utils subpackage
 
    diPLSlib.utils
 
-Module contents
+模块内容
 ---------------
 
 .. automodule:: diPLSlib

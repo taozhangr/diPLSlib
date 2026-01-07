@@ -1,6 +1,6 @@
 LICENSE
 README.md
-setup.py
+pyproject.toml
 diPLSlib/__init__.py
 diPLSlib/functions.py
 diPLSlib/models.py
@@ -11,4 +11,9 @@ diPLSlib.egg-info/requires.txt
 diPLSlib.egg-info/top_level.txt
 diPLSlib/utils/__init__.py
 diPLSlib/utils/misc.py
+diplslib.egg-info/PKG-INFO
+diplslib.egg-info/SOURCES.txt
+diplslib.egg-info/dependency_links.txt
+diplslib.egg-info/requires.txt
+diplslib.egg-info/top_level.txt
 tests/test_doctests.py

@@ -1,8 +1,8 @@
-diPLSlib.utils subpackage
+diPLSlib.utils 子包
 =========================
 
 
-diPLSlib.utils.misc module
+diPLSlib.utils.misc 模块
 --------------------------
 
 .. automodule:: diPLSlib.utils.misc
@@ -10,7 +10,7 @@ diPLSlib.utils.misc module
    :undoc-members:
    :show-inheritance:
 
-Module contents
+模块内容
 ---------------
 
 .. automodule:: diPLSlib.utils

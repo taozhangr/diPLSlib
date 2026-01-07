@@ -1,0 +1,46 @@
+[project]
+name = "diplslib"
+version = "2.5.0"
+description = "用于多元回归中域自适应的 Python库"
+authors = [
+    { name = "Ramin Nikzad-Langerodi", email = "ramin.nikzad-langerodi@scch.at" },
+]
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "GPL-3.0-only" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "ipykernel>=7.1.0",
+    "matplotlib>=3.10.0",
+    "notebook>=7.5.1",
+    "numpy>=2.2.0",
+    "numpydoc>=1.8.0",
+    "scikit-learn>=1.6.0",
+    "scipy>=1.15.0",
+    "setuptools>=75.1.0",
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.1",
+    "pandas",
+    "seaborn",
+    "nbformat",
+    "nbconvert",
+    "chemotools",
+]
+
+[project.urls]
+Homepage = "https://github.com/B-Analytics/di-PLS"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["diPLSlib"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+]

@@ -19,3 +19,9 @@ build/
 
 # Ignore the contributing file
 .contributing.md
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.swp
+*.swo

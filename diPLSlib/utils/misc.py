@@ -1,5 +1,5 @@
 '''
-Some helper functions for diPLSlib
+diPLSlib 的一些辅助函数
 '''
 
 import numpy as np
@@ -10,33 +10,33 @@ from scipy.special import erf
 
 def gengaus(length, mu, sigma, mag, noise=0):
     """
-    Generate a Gaussian spectrum-like signal with optional random noise.
+    生成一个具有可选随机噪声的类似高斯光谱的信号。
 
-    Parameters
+    参数
     ----------
 
     length : int
-        Length of the generated signal.
+        生成的信号长度。
 
     mu : float
-        Mean of the Gaussian function.
+        高斯函数的均值。
 
     sigma : float
-        Standard deviation of the Gaussian function.
+        高斯函数的标准差。
 
     mag : float
-        Magnitude of the Gaussian signal.
+        高斯信号的幅度。
 
-    noise : float, optional (default=0)
-        Standard deviation of the Gaussian noise to be added to the signal.
+    noise : float, 可选 (默认=0)
+        要添加到信号中的高斯噪声的标准差。
 
-    Returns
+    返回
     -------
 
-    signal : ndarray of shape (length,)
-        The generated Gaussian signal with noise.
+    signal : 形状为 (length,) 的 ndarray
+        生成的带有噪声的高斯信号。
 
-    Examples
+    示例
     --------
 
     >>> from diPLSlib.utils.misc import gengaus
@@ -54,24 +54,24 @@ def gengaus(length, mu, sigma, mag, noise=0):
 
 def hellipse(X, alpha=0.05): 
     """
-    Compute the 95% confidence interval ellipse for a 2D scatter plot.
+    计算 2D 散点图的 95% 置信区间椭圆。
 
-    Parameters
+    参数
     ----------
 
-    X : ndarray of shape (n_samples, 2)
-        Matrix of data points.
+    X : 形状为 (n_samples, 2) 的 ndarray
+        数据点矩阵。
 
-    alpha : float, optional (default=0.05)
-        Significance level for the confidence interval.
+    alpha : float, 可选 (默认=0.05)
+        置信区间的显著性水平。
 
-    Returns
+    返回
     -------
 
-    el : ndarray of shape (2, 100)
-        Coordinates of the ellipse's points. To plot, use `plt.plot(el[0, :], el[1, :])`.
+    el : 形状为 (2, 100) 的 ndarray
+        椭圆点的坐标。要绘制，请使用 `plt.plot(el[0, :], el[1, :])`。
 
-    Examples
+    示例
     --------
 
     >>> import matplotlib.pyplot as plt
@@ -87,24 +87,24 @@ def hellipse(X, alpha=0.05):
     <matplotlib.legend.Legend object at ...>
     """
     
-    # Means
+    # 均值
     mean_all = np.zeros((2,1))   
     mean_all[0] = np.mean(X[:,0])
     mean_all[1] = np.mean(X[:,1])
 
-    # Covariance matrix
+    # 协方差矩阵
     X = X[:,:2]
     comat_all = np.cov(np.transpose(X))
 
-    # SVD
+    # SVD 分解
     U,S,V = np.linalg.svd(comat_all)
 
-    # Confidence limit computed as the 95% quantile of the F-Distribution
+    # 置信限计算为 F 分布的 95% 分位数
     N = np.shape(X)[0]
     quant = 1 - alpha
     Conf = (2*(N-2))/(N-2)*f.ppf(quant,2,(N-2))
     
-    # Evalute CI on (0,2pi)
+    # 在 (0, 2pi) 上评估置信区间 (CI)
     el = np.zeros((2,100))
     t = np.linspace(0,2*np.pi,100)
     for j in np.arange(100):
@@ -116,24 +116,24 @@ def hellipse(X, alpha=0.05):
 
 def rmse(y, yhat):
     """
-    Compute the Root Mean Squared Error (RMSE) between two arrays.
+    计算两个数组之间的均方根误差 (RMSE)。
 
-    Parameters
+    参数
     ----------
 
-    y : ndarray of shape (n_samples,)
-        True values.
+    y : 形状为 (n_samples,) 的 ndarray
+        真实值。
 
-    yhat : ndarray of shape (n_samples,)
-        Predicted values.
+    yhat : 形状为 (n_samples,) 的 ndarray
+        预测值。
 
-    Returns
+    返回
     -------
 
-    error : ndarray of shape (n_samples,)
-        The RMSE between `y` and `yhat`.
+    error : 形状为 (n_samples,) 的 ndarray
+        `y` 和 `yhat` 之间的 RMSE。
 
-    Examples
+    示例
     --------
 
     >>> import numpy as np
@@ -150,33 +150,33 @@ def rmse(y, yhat):
 
 def calibrateAnalyticGaussianMechanism(epsilon, delta, GS, tol = 1.e-12):
     """ 
-    Calibrate a Gaussian perturbation for differential privacy using the analytic Gaussian mechanism of [Balle and Wang, ICML'18]
+    使用 [Balle and Wang, ICML'18] 的解析高斯机制校准用于差分隐私的高斯扰动。
 
-    Parameters
+    参数
     ----------
     epsilon : float
-        Privacy parameter epsilon
+        隐私参数 epsilon
 
     delta : float
-        Desired privacy failure probability
+        期望的隐私失败概率
 
     GS : float
-        Upper bound on the L2-sensitivity of the function to which the mechanism is applied
+        应用该机制的函数的 L2 敏感度上界
 
     tol : float
-        Error tolerance for binary search
+        二分查找的误差容限
 
 
-    Returns
+    返回
     -------
     sigma : float
-        Standard deviation of Gaussian noise needed to achieve (epsilon,delta)-DP under global sensitivity GS
+        在全局敏感度 GS 下实现 (epsilon, delta)-DP 所需的高斯噪声标准差
 
-    References
+    参考文献
     ----------
     - Balle, B., & Wang, Y. X. (2018, July). Improving the gaussian mechanism for differential privacy: Analytical calibration and optimal denoising. In International Conference on Machine Learning (pp. 394-403). PMLR.
 
-    Examples
+    示例
     --------
     >>> from diPLSlib.utils.misc import calibrateAnalyticGaussianMechanism
     >>> calibrateAnalyticGaussianMechanism(1.0, 1e-5, 1.0)

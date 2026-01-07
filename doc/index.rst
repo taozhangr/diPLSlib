@@ -3,25 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-diPLSlib documentation
+diPLSlib 文档
 ======================
 
-Introduction
+简介
 ------------
 
-**diPLSlib** is a Python library designed for domain adaptation in multivariate calibration, with a focus on privacy-preserving regression and calibration model maintenance. It provides a scikit-learn compatible API and implements advanced methods for aligning data distributions across different domains, enabling robust and transferable regression models.
+**diPLSlib** 是一个专为多元校正中的域自适应设计的 Python 库，重点关注保护隐私的回归和校正模型维护。它提供了一个与 scikit-learn 兼容的 API，并实现了对齐不同域之间数据分布的高级方法，从而构建健壮且可转移的回归模型。
 
-The library features several state-of-the-art algorithms, including:
+该库具有多种先进算法，包括：
 
-- **Domain-Invariant Partial Least Squares (di-PLS/mdi-PLS):** Aligns feature distributions between source and target domains to improve model generalization.
-- **Graph-based Calibration Transfer (GCT-PLS):** Minimizes discrepancies between paired samples from different domains in the latent variable space.
-- **Kernel Domain Adaptive PLS (KDAPLS):** Projects data into a reproducing kernel Hilbert space for non-parametric domain adaptation.
-- **Differentially Private PLS (EDPLS):** Ensures privacy guarantees for sensitive data using the :math:`(\epsilon, \delta)`-differential privacy framework.
+- **域不变偏最小二乘 (di-PLS/mdi-PLS):** 对齐源域和目标域之间的特征分布，以提高模型的泛化能力。
+- **基于图的校正转移 (GCT-PLS):** 在潜变量空间中最小化来自不同域的配对样本之间的差异。
+- **核域自适应 PLS (KDAPLS):** 将数据投影到再生核希尔伯特空间中，进行非参数域自适应。
+- **差分隐私 PLS (EDPLS):** 使用 :math:`(\epsilon, \delta)`-差分隐私框架确保敏感数据的隐私保证。
 
-diPLSlib is suitable for chemometrics, analytical chemistry, and other fields where robust calibration transfer and privacy-preserving modeling are required. For more details, usage examples, and API documentation, please refer to the sections below.
+diPLSlib 适用于化学计量学、分析化学以及其他需要健壮校正转移和保护隐私建模的领域。有关更多详细信息、使用示例和 API 文档，请参阅以下章节。
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: 内容:
 
    diPLSlib

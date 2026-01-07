@@ -8,24 +8,30 @@ from diPLSlib.models import DIPLS, GCTPLS, EDPLS, KDAPLS
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 import os
+import sys
+
+# 修复 Windows 上 zmq 的事件循环警告
+if sys.platform == 'win32':
+    import asyncio
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 class TestDocstrings(unittest.TestCase):
 
-    # Test if all docstring examples run without errors
+    # 测试所有文档字符串示例是否能无错运行
     def test_docstrings(self):
 
-        # Run doctests across all modules in your_package
+        # 在 diPLSlib 的所有模块中运行 doctest
         doctest.testmod(diPLSlib.models)
         doctest.testmod(diPLSlib.functions)
         doctest.testmod(diPLSlib.utils.misc)
 
-    # Test if diPLSlib.model classes pass check_estimator
+    # 测试 diPLSlib.model 类是否通过 check_estimator
     def test_check_estimator(self):
 
         models = [
         DIPLS(),
         GCTPLS(),
-        EDPLS(A=2, epsilon=1.0, delta=0.05),  # Add required parameters for EDPLS
+        EDPLS(A=2, epsilon=1.0, delta=0.05),  # 为 EDPLS 添加必需的参数
         KDAPLS()
         ]
     
@@ -33,9 +39,9 @@ class TestDocstrings(unittest.TestCase):
             check_estimator(model)
         
 
-    # Test if all notebooks run without errors
+    # 测试所有 notebook 是否能无错运行
     def test_notebooks(self):
-        # List of notebooks to test
+        # 待测试的 notebook 列表
         notebooks = [
             './notebooks/demo_diPLS.ipynb',
             './notebooks/demo_mdiPLS.ipynb',
@@ -49,7 +55,7 @@ class TestDocstrings(unittest.TestCase):
                 nb = nbformat.read(f, as_version=4)
                 ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
 
-                # Set the working directory to the root of the project
+                # 将工作目录设置为项目根目录
                 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
                 os.chdir(root_dir)
 
