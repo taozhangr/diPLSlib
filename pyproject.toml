@@ -16,7 +16,6 @@ dependencies = [
     "ipykernel>=7.1.0",
     "matplotlib>=3.10.0",
     "notebook>=7.5.1",
-    "numpy>=2.2.0",
     "numpydoc>=1.8.0",
     "scikit-learn>=1.6.0",
     "scipy>=1.15.0",
@@ -28,6 +27,8 @@ dependencies = [
     "nbformat",
     "nbconvert",
     "chemotools",
+    "pandas-stubs>=3.0.0.260204",
+    "numpy>=2.4.0",
 ]
 
 [project.urls]
