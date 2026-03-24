@@ -1,5 +1,6 @@
 # Ignore Python bytecode files
 __pycache__/
+**/__pycache__/
 *.py[cod]
 
 # Ignore virtual environment directories
@@ -10,6 +11,14 @@ env/
 dist/
 build/
 *.egg-info/
+doc/_build/
+
+# Ignore test and notebook cache files
+.pytest_cache/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
 
 # Ignore the .env file
 .env
